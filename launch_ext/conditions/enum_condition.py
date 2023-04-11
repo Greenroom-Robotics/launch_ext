@@ -1,6 +1,6 @@
 """Module for EnumCondition class."""
 
-from typing import Text, Optional
+from typing import List, Text, Optional
 
 from enum import Enum
 
@@ -41,3 +41,13 @@ class EnumCondition(Condition):
     def describe(self) -> Text:
         """Return a description of this Condition."""
         return self.__repr__()
+
+    @staticmethod
+    def enum_to_choices(enum_type: Enum) -> List[str]:
+        """
+        Convert an enum to a list of choices.
+
+        :param enum_type: The enum type to convert to.
+        :return: The list of choices.
+        """
+        return [k.lower() for k, v in enum_type.__members__.items()]
