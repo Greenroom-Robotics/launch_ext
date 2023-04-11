@@ -1,10 +1,11 @@
 """Main entry point for the `launch_ext` package."""
 
+from . import actions
 from . import conditions
 from . import substitutions
 
 __all__ = [
-    # 'actions',
+    'actions',
     # 'descriptions',
     # 'event_handlers',
     # 'events',

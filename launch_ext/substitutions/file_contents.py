@@ -1,4 +1,4 @@
-"""Module for the FileContentsSubstitution substitution."""
+"""Module for the FileContents substitution."""
 
 from typing import Text, List
 
