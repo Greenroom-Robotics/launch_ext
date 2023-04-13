@@ -14,7 +14,7 @@ setup(
     ],
     install_requires=[
         'setuptools',
-        'launch'
+        # 'launch'
     ],
     zip_safe=True,
     author='Russ Webber',
