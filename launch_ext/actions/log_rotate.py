@@ -8,7 +8,7 @@ import re
 
 import launch.logging
 
-from launch.action import OpaqueFunction
+from launch.actions import OpaqueFunction
 from launch.launch_context import LaunchContext
 from launch.some_substitutions_type import SomeSubstitutionsType
 

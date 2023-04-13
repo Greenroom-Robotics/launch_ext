@@ -4,18 +4,18 @@ from typing import Text
 
 from launch.launch_context import LaunchContext
 from launch.substitution import Substitution
-from launch.conditional import Conditional
+from launch.condition import Condition
 from launch.some_substitutions_type import SomeSubstitutionsType
 
 
 class Unary(Substitution):
     """Substitution that returns one of two results depending on single conditional."""
 
-    def __init__(self, *, conditional: Conditional, when_true: SomeSubstitutionsType, when_false: SomeSubstitutionsType) -> None:
+    def __init__(self, *, conditional: Condition, when_true: SomeSubstitutionsType, when_false: SomeSubstitutionsType) -> None:
         """Create a UnarySubstitution."""
         super().__init__()
 
-        if not isinstance(conditional, Conditional):
+        if not isinstance(conditional, Condition):
             raise TypeError(
                 "UnarySubstitution expected Conditional object got '{}' instead.".format(type(conditional))
             )
