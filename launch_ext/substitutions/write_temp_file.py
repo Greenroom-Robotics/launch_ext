@@ -1,17 +1,13 @@
 """Module for the WriteTempFile substitution."""
 
 from typing import Text, List
-
-from pathlib import Path
 from tempfile import NamedTemporaryFile
-
 
 from launch.launch_context import LaunchContext
 from launch.substitution import Substitution
 from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.utilities import normalize_to_list_of_substitutions
 from launch.utilities import perform_substitutions
-from launch.substitutions.substitution_failure import SubstitutionFailure
 
 
 class WriteTempFile(Substitution):
