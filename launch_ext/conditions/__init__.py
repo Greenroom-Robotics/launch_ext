@@ -1,7 +1,7 @@
 """conditions Module."""
 
-from .enum_condition import EnumCondition
+from .enum_equal import EnumEqual
 
 __all__ = [
-    'EnumCondition',
+    'EnumEqual',
 ]

@@ -19,14 +19,17 @@ class YAMLToFile(WriteTempFile):
         return self._WriteTempFile__contents
 
     def describe(self) -> Text:
-        """Return a description of this substitution as a string."""
+        """Return a description of this substitution as a string. WARNING Does not accuractely represent the YAML contents due to Substitution limitations."""
         contents_str = ' + '.join([sub.describe() for sub in super().contents])
         return 'YAMLToFile(contents={})'.format(contents_str)
 
     def write(self, handle: BinaryIO, context: LaunchContext) -> None:
-        #pyyaml representer for Substitution objects
+        dumper = yaml.Dumper
+
         def substitution_representer(dumper: yaml.Dumper, data: SomeSubstitutionsType):
+            #pyyaml representer for Substitution objects
             return dumper.represent_str(data.perform(context))
 
-        yaml.add_multi_representer(Substitution, substitution_representer)
-        yaml.dump(self.contents, handle, encoding='utf8')
+        dumper.add_multi_representer(Substitution, substitution_representer)
+
+        yaml.dump(self.contents, handle, Dumper=dumper, encoding='utf8')

@@ -1,4 +1,4 @@
-"""Module for EnumCondition class."""
+"""Module for EnumEqual class."""
 
 from typing import List, Text, Optional
 
@@ -24,7 +24,7 @@ def str_to_enum(enum_type: Enum, string: str) -> Optional[Enum]:
     return None
 
 
-class EnumCondition(Condition):
+class EnumEqual(Condition):
     """
     Encapsulates a condition to check if it equals an enum to be evaluated when launching.
     """
