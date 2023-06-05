@@ -37,7 +37,7 @@ def log_rotate(context: LaunchContext, root_log_dir: SomeSubstitutionsType, curr
 
 def LogRotate(current_log_dir: SomeSubstitutionsType, max_age: Optional[timedelta], root_log_dir: Optional[SomeSubstitutionsType]=None, symlinks: bool=True) -> OpaqueFunction:
     """Action that rotates the log directory when executed."""
-    return OpaqueFunction(log_rotate, kwargs={
+    return OpaqueFunction(function=log_rotate, kwargs={
         'current_log_dir': current_log_dir,
         'max_age': max_age,
         'root_log_dir': root_log_dir,
