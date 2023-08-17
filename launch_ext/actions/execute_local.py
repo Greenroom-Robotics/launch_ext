@@ -67,7 +67,7 @@ from launch.events.process import SignalProcess
 from launch.launch_context import LaunchContext
 from launch.launch_description import LaunchDescription
 from launch.launch_description_entity import LaunchDescriptionEntity
-from launch.some_actions_type import SomeActionsType
+from launch.some_actions_type import SomeEntitiesType
 from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.substitution import Substitution  # noqa: F401
 from launch.substitutions import LaunchConfiguration
@@ -109,7 +109,7 @@ from launch.event_handlers.on_action_event_base import OnActionEventBase
 from launch.event import Event
 from launch.events.process import ProcessIO
 from launch.launch_context import LaunchContext
-from launch.some_actions_type import SomeActionsType
+from launch.some_actions_type import SomeEntitiesType
 
 from launch.events.process import ProcessExited
 
@@ -118,15 +118,15 @@ class OnProcessIO(OnActionEventBase):
     """Convenience class for handling I/O from processes via events."""
 
     # TODO(wjwwood): make the __init__ more flexible like OnProcessExit, so
-    # that it can take SomeActionsType directly or a callable that returns it.
+    # that it can take SomeEntitiesType directly or a callable that returns it.
     def __init__(
         self,
         *,
         target_action:
             Optional[Union[Callable[['ExecuteLocalExt'], bool], 'ExecuteLocalExt']] = None,
-        on_stdin: Callable[[ProcessIO], Optional[SomeActionsType]] = None,
-        on_stdout: Callable[[ProcessIO], Optional[SomeActionsType]] = None,
-        on_stderr: Callable[[ProcessIO], Optional[SomeActionsType]] = None,
+        on_stdin: Callable[[ProcessIO], Optional[SomeEntitiesType]] = None,
+        on_stdout: Callable[[ProcessIO], Optional[SomeEntitiesType]] = None,
+        on_stderr: Callable[[ProcessIO], Optional[SomeEntitiesType]] = None,
         **kwargs
     ) -> None:
         """Create an OnProcessIO event handler."""
@@ -135,7 +135,7 @@ class OnProcessIO(OnActionEventBase):
             Optional[Union[Callable[['Action'], bool], 'Action']],
             target_action)
 
-        def handle(event: Event, _: LaunchContext) -> Optional[SomeActionsType]:
+        def handle(event: Event, _: LaunchContext) -> Optional[SomeEntitiesType]:
             event = cast(ProcessIO, event)
             if event.from_stdout and on_stdout is not None:
                 return on_stdout(event)
@@ -168,8 +168,8 @@ class OnProcessExit(OnActionEventBase):
             Optional[Union[Callable[['ExecuteLocalExt'], bool], 'ExecuteLocalExt']] = None,
         on_exit:
             Union[
-                SomeActionsType,
-                Callable[[ProcessExited, LaunchContext], Optional[SomeActionsType]]
+                SomeEntitiesType,
+                Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]]
             ],
         **kwargs
     ) -> None:
@@ -179,8 +179,8 @@ class OnProcessExit(OnActionEventBase):
             target_action)
         on_exit = cast(
             Union[
-                SomeActionsType,
-                Callable[[Event, LaunchContext], Optional[SomeActionsType]]],
+                SomeEntitiesType,
+                Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]],
             on_exit)
         super().__init__(
             action_matcher=target_action,
@@ -240,8 +240,8 @@ class ExecuteLocalExt(Action):
         cached_output: bool = False,
         log_cmd: bool = False,
         on_exit: Optional[Union[
-            SomeActionsType,
-            Callable[[ProcessExited, LaunchContext], Optional[SomeActionsType]]
+            SomeEntitiesType,
+            Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]]
         ]] = None,
         respawn: Union[bool, SomeSubstitutionsType] = False,
         respawn_delay: Optional[float] = None,
@@ -476,7 +476,7 @@ class ExecuteLocalExt(Action):
     def __on_process_stdin(
         self,
         event: ProcessIO
-    ) -> Optional[SomeActionsType]:
+    ) -> Optional[SomeEntitiesType]:
         self.__logger.warning(
             "in ExecuteProcess('{}').__on_process_stdin_event()".format(id(self)),
         )
@@ -485,7 +485,7 @@ class ExecuteLocalExt(Action):
 
     def __on_process_output(
         self, event: ProcessIO, buffer: io.TextIOBase, logger: logging.Logger
-    ) -> Optional[SomeActionsType]:
+    ) -> Optional[SomeEntitiesType]:
         to_write = event.text.decode(errors='replace')
         if buffer.closed:
             # buffer was probably closed by __flush_buffers on shutdown.  Output without
@@ -536,7 +536,7 @@ class ExecuteLocalExt(Action):
 
     def __on_process_output_cached(
         self, event: ProcessIO, buffer, logger
-    ) -> Optional[SomeActionsType]:
+    ) -> Optional[SomeEntitiesType]:
         to_write = event.text.decode(errors='replace')
         last_cursor = buffer.tell()
         buffer.seek(0, os.SEEK_END)  # go to end of buffer
@@ -563,7 +563,7 @@ class ExecuteLocalExt(Action):
                 self.__output_format.format(line=line, this=self)
             )
 
-    def __on_shutdown(self, event: Event, context: LaunchContext) -> Optional[SomeActionsType]:
+    def __on_shutdown(self, event: Event, context: LaunchContext) -> Optional[SomeEntitiesType]:
         due_to_sigint = cast(Shutdown, event).due_to_sigint
         return self._shutdown_process(
             context,
