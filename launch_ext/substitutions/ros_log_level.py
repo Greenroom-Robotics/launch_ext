@@ -19,7 +19,7 @@ def ROSLoggers(node_level: SomeSubstitutionsType = None, *args):
 
     if node_level is not None:
         out.append("--log-level")
-        out.append(ROSLogLevel(v))
+        out.append(ROSLogLevel(node_level))
     return out
 
 class ROSLogLevel(Substitution):
