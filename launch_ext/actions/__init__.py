@@ -2,6 +2,7 @@
 
 from .log_rotate import LogRotate
 from .include_package_launch_file import IncludePackageLaunchFile
+from .make_device_node import MakeDeviceNode
 from .write_file import WriteFile
 from .set_launch_configuration_if_not_none import SetLaunchConfigurationIfNotNone
 from .execute_local import ExecuteLocalExt
@@ -14,4 +15,5 @@ __all__ = [
     'SetLaunchConfigurationIfNotNone',
     'ExecuteLocalExt',
     'ExecuteProcessExt',
+    'MakeDeviceNode'
 ]

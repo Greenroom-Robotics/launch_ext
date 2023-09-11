@@ -67,7 +67,7 @@ from launch.events.process import SignalProcess
 from launch.launch_context import LaunchContext
 from launch.launch_description import LaunchDescription
 from launch.launch_description_entity import LaunchDescriptionEntity
-from launch.some_actions_type import SomeEntitiesType
+from launch.some_entities_type import SomeEntitiesType
 from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.substitution import Substitution  # noqa: F401
 from launch.substitutions import LaunchConfiguration
@@ -109,7 +109,7 @@ from launch.event_handlers.on_action_event_base import OnActionEventBase
 from launch.event import Event
 from launch.events.process import ProcessIO
 from launch.launch_context import LaunchContext
-from launch.some_actions_type import SomeEntitiesType
+from launch.some_entities_type import SomeEntitiesType
 
 from launch.events.process import ProcessExited
 
