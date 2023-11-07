@@ -30,30 +30,6 @@ Will create a device node at `/dev/tty-magnetometer` if it does not already exis
 
 ### Templated
 
-### ROSLoggers and ROSLogLevel
-Substitutions for setting the levels of ROS node loggers.
-
-**NOTE: This unfortunately requires the `name` argument of each `Node` to be set at the moment.**
-
-```python
-ros_arguments=["--log-level", ROSLogLevel("debug")]
-```
-
-Will set only the node's log level to `debug`. (Equivalent to `--log-level node_name:=debug`)
-
-```python
-ros_arguments=["--log-level", ROSLogLevel("debug", all_loggers=True)]
-```
-
-Will set all loggers to `debug`. (Equivalent to `--log-level debug`)
-
-```python
-ros_arguments=[*ROSLoggers("debug", {'rcl': 'debug', 'rmw_fastrtps_cpp': 'info'})]
-```
-
-Will set the node's log level to `debug`, `rcl` to `debug` and `rmw_fastrtps_cpp` to `info`.
-(Equivalent to `--log-level node_name:=debug --log-level rcl:=debug --log-level rmw_fastrtps_cpp:=info`)
-
 ### Unary
 
 ### WriteTempFile
