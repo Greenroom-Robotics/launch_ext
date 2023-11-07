@@ -28,8 +28,6 @@ Will create a device node at `/dev/tty-magnetometer` if it does not already exis
 
 ## Substitutions
 
-### FileContents
-
 ### Templated
 
 ### ROSLoggers and ROSLogLevel
