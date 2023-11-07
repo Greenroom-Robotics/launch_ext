@@ -29,6 +29,76 @@ def re_glob_path(path: Path, pattern: re.Pattern, directory: Optional[bool]=None
         results.append(p)
     return results
 
+
+def create_device_node(target_node, major, minor):
+    subprocess.run(["sudo", "mknod", target_node, "c", major, minor]).check_returncode()
+    subprocess.run(["sudo", "chgrp", "dialout", target_node]).check_returncode()
+    subprocess.run(["sudo", "chmod", "0660", target_node]).check_returncode()
+
+
+class MakeDeviceNodeFromPath(Action):
+    """Action that logs a message when executed."""
+
+    def __init__(self, target_node: SomeSubstitutionsType, device_path: SomeSubstitutionsType, **kwargs):
+        """Create a MakeDeviceNodeFromPath action."""
+        super().__init__(**kwargs)
+
+        self.__target_node = normalize_to_list_of_substitutions(target_node)
+        self.__device_path = normalize_to_list_of_substitutions(device_path)
+
+    def execute(self, context: LaunchContext) -> None:
+        """Execute the action."""
+
+        target_node = perform_substitutions(context, self.__target_node)
+        device_path = perform_substitutions(context, self.__device_path)
+
+        if Path(target_node).exists():
+            launch.logging.get_logger('launch.user').info(f"Device node {target_node} already exists")
+            return None
+
+        device_sysfs_path = Path(device_path)
+        if not device_sysfs_path.exists():
+            launch.logging.get_logger('launch.user').error(f"Could not find device path '{device_path}'")
+            return None
+
+        launch.logging.get_logger('launch.user').info(f"Creating device node {target_node} from {device_path}")
+
+        major, minor = (device_sysfs_path / "dev").read_text().strip().split(":")
+        create_device_node(target_node, major, minor)
+
+        return None
+
+
+class MakeUSBDeviceNodesFromPortPath(Action):
+    """Action that logs a message when executed."""
+
+    def __init__(self, port_path: SomeSubstitutionsType, **kwargs):
+        """Create a MakeDeviceNodeFromPath action."""
+        super().__init__(**kwargs)
+
+        self.__port_path = normalize_to_list_of_substitutions(port_path)
+
+    def execute(self, context: LaunchContext) -> None:
+        """Execute the action."""
+
+        port_path = perform_substitutions(context, self.__port_path)
+
+        if Path(target_node).exists():
+            launch.logging.get_logger('launch.user').info(f"Device node {target_node} already exists")
+            return None
+
+        device_sysfs_path = Path(port_path)
+        if not device_sysfs_path.exists():
+            launch.logging.get_logger('launch.user').error(f"Could not find device path '{device_path}'")
+            return None
+
+        launch.logging.get_logger('launch.user').info(f"Creating device node {target_node} from {port_path}")
+
+        major, minor = (device_sysfs_path / "dev").read_text().strip().split(":")
+        create_device_node(target_node, major, minor)
+
+        return None
+
 class MakeDeviceNode(Action):
     """Action that logs a message when executed."""
 
@@ -74,7 +144,6 @@ class MakeDeviceNode(Action):
                 
         return None
 
-
     def execute(self, context: LaunchContext) -> None:
         """Execute the action."""
 
@@ -101,8 +170,6 @@ class MakeDeviceNode(Action):
 
         major, minor = (usb_interface / "dev").read_text().strip().split(":")
 
-        subprocess.run(["sudo", "mknod", target_node, "c", major, minor]).check_returncode()
-        subprocess.run(["sudo", "chgrp", "dialout", target_node]).check_returncode()
-        subprocess.run(["sudo", "chmod", "0660", target_node]).check_returncode()
+        create_device_node(target_node, major, minor)
 
         return None
