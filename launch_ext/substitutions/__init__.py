@@ -4,6 +4,7 @@ from .templated import Templated
 from .unary import Unary
 from .write_temp_file import WriteTempFile
 from .yaml_to_file import YAMLToFile
+from .xacro import Xacro
 
 __all__ = [
     'ROSLoggers',
@@ -11,4 +12,5 @@ __all__ = [
     'Unary',
     'WriteTempFile',
     'YAMLToFile',
+    "Xacro",
 ]
