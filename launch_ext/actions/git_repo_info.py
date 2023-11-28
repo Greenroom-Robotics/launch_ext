@@ -17,7 +17,7 @@ def get_repo_info(context: LaunchContext, path: SomeSubstitutionsType):
         context (LaunchContext): LaunchContext
         path (SomeSubstitutionsType): Path to the git repo
     """
-    path: Path = Path(perform_substitutions(context, path))
+    path = Path(perform_substitutions(context, path))
     repo = git.Repo(path, search_parent_directories=True)
     launch.logging.get_logger('launch.user').info(f"Repository Info | Path: {path.absolute()}, Branch: {repo.active_branch.name}, Commit: {repo.head.object.hexsha + (' (dirty)' if repo.is_dirty() else '')}")
 
@@ -32,13 +32,15 @@ def verify_repo_is_clean(context: LaunchContext, path: SomeSubstitutionsType, pa
     Raises:
         RuntimeError: If the git repo is dirty and pass_on_failure is False
     """
-    path: Path = Path(perform_substitutions(context, path))
+    path = Path(perform_substitutions(context, path))
     repo = git.Repo(path, search_parent_directories=True)
     if repo.is_dirty():
         if pass_on_failure:
             launch.logging.get_logger('launch.user').warn(f"Git repo at {path.absolute()} is dirty")
         else:
             raise RuntimeError(f"Git repo at {path.absolute()} is dirty.")
+    else:
+        launch.logging.get_logger('launch.user').info(f"Git repo at {path.absolute()} is clean.")
 
 def verify_repo_commit(context: LaunchContext, path: SomeSubstitutionsType, commit: SomeSubstitutionsType, pass_on_failure: bool):
     """Verify that the git repo is at the specified commit.
@@ -52,14 +54,16 @@ def verify_repo_commit(context: LaunchContext, path: SomeSubstitutionsType, comm
     Raises:
         RuntimeError: If the git repo is not at the specified commit and pass_on_failure is False
     """
-    path: Path = Path(perform_substitutions(context, path))
-    commit: str = perform_substitutions(context, commit)
+    path = Path(perform_substitutions(context, path))
+    commit = perform_substitutions(context, commit)
     repo = git.Repo(path, search_parent_directories=True)
     if repo.head.object.hexsha != commit:
         if pass_on_failure:
             launch.logging.get_logger('launch.user').warn(f"Git repo at {path.absolute()} is not at commit {commit}. Currently at {repo.head.object.hexsha}.")
         else:
             raise RuntimeError(f"Git repo at {path.absolute()} is not at commit {commit}.")
+    else:
+        launch.logging.get_logger('launch.user').info(f"Git repo at {path.absolute()} is at commit {commit}.")
 
 def LogRepoInfo(path: SomeSubstitutionsType) -> OpaqueFunction:
     """Action that logs the git repo info when executed.
@@ -92,8 +96,8 @@ def VerifyRepoCommit(path: SomeSubstitutionsType, commit: SomeSubstitutionsType,
     return OpaqueFunction(function=verify_repo_commit, kwargs={'path': path, 'commit': commit, 'pass_on_failure': pass_on_failure})
 
 def save_git_diff(context: LaunchContext, path: SomeSubstitutionsType, output_file: SomeSubstitutionsType):
-    path: Path = Path(perform_substitutions(context, path))
-    output_file: Path = Path(perform_substitutions(context, output_file))
+    path = Path(perform_substitutions(context, path))
+    output_file = Path(perform_substitutions(context, output_file))
     repo = git.Repo(path, search_parent_directories=True)
     with open(output_file, 'w') as f:
         f.write(repo.git.diff())
