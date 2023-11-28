@@ -83,13 +83,36 @@ def VerifyRepoCommit(path: SomeSubstitutionsType, commit: SomeSubstitutionsType,
         pass_on_failure (bool, optional): Whether or not to pass on error. Defaults to True.
 
     Returns:
-        OpaqueFunction: _description_
+        OpaqueFunction: OpaqueFunction
     """
     
     path = normalize_to_list_of_substitutions(path)
     commit = normalize_to_list_of_substitutions(commit)
 
     return OpaqueFunction(function=verify_repo_commit, kwargs={'path': path, 'commit': commit, 'pass_on_failure': pass_on_failure})
+
+def save_git_diff(context: LaunchContext, path: SomeSubstitutionsType, output_file: SomeSubstitutionsType):
+    path: Path = Path(perform_substitutions(context, path))
+    output_file: Path = Path(perform_substitutions(context, output_file))
+    repo = git.Repo(path, search_parent_directories=True)
+    with open(output_file, 'w') as f:
+        f.write(repo.git.diff())
+
+def SaveRepoDiff(path: SomeSubstitutionsType, output_file: SomeSubstitutionsType) -> OpaqueFunction:
+    """Action that saves the diff of the repo to file.
+
+    Args:
+        path (SomeSubstitutionsType): Path to the git repo
+        output_file (SomeSubstitutionsType): Output file
+
+    Returns:
+        OpaqueFunction: OpaqueFunction
+    """
+
+    path = normalize_to_list_of_substitutions(path)
+    output_file = normalize_to_list_of_substitutions(output_file)
+
+    return OpaqueFunction(function=save_git_diff, kwargs={'path': path, 'output_file': output_file})
 
 def VerifyRepoClean(path: SomeSubstitutionsType, pass_on_failure: bool=True) -> OpaqueFunction:
     """Action that commits the git repo info when executed.
@@ -99,7 +122,7 @@ def VerifyRepoClean(path: SomeSubstitutionsType, pass_on_failure: bool=True) -> 
         pass_on_failure (bool, optional): Whether or not to pass on error. Defaults to True.
 
     Returns:
-        OpaqueFunction: _description_
+        OpaqueFunction: OpaqueFunction
     """
 
     path = normalize_to_list_of_substitutions(path)

@@ -7,7 +7,7 @@ from .write_file import WriteFile
 from .set_launch_configuration_if_not_none import SetLaunchConfigurationIfNotNone
 from .execute_local import ExecuteLocalExt
 from .execute_process import ExecuteProcessExt
-from .git_repo_info import LogRepoInfo, VerifyRepoCommit, VerifyRepoClean
+from .git_repo_info import LogRepoInfo, VerifyRepoCommit, VerifyRepoClean, SaveRepoDiff
 
 __all__ = [
     'LogRotate',
@@ -20,4 +20,5 @@ __all__ = [
     'LogRepoInfo',
     'VerifyRepoCommit',
     'VerifyRepoClean',
+    'SaveRepoDiff',
 ]
