@@ -22,6 +22,26 @@ Will create a device node at `/dev/tty-magnetometer` if it does not already exis
 
 ### WriteFile
 
+### LogRepoInfo
+
+This will get the specified repository information and log it.
+```python
+LogRepoInfo("/path/to/repo")
+```
+
+### VerifyRepoCommit
+This will verify the specified repository is at the specified commit hash. You can also specify whether to throw an exception of failure.
+
+```python
+VerifyRepoCommit("/path/to/repo", "<commit-hash>", pass_on_failure=False)
+```
+
+### VerifyRepoClean
+This will verify the specified repository is clean. You can also specify whether to throw an exception of failure.
+```python
+VerifyRepoClean("/path/to/repo", pass_on_failure=False)
+```
+
 ## Conditions
 
 ### EnumEqual
