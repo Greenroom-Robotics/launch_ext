@@ -3,6 +3,7 @@
 from . import actions
 from . import conditions
 from . import substitutions
+from . import entrypoints
 
 __all__ = [
     'actions',
@@ -11,4 +12,5 @@ __all__ = [
     # 'events',
     'conditions',
     'substitutions',
+    'entrypoints'
 ]
