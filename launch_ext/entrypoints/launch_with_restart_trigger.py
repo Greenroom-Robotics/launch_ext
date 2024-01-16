@@ -73,20 +73,12 @@ def launch_with_restart_trigger(
             shared_state=shared_state,
             sleep_time=sleep_time
         )
-        try:
-            rclpy.spin(node)
-        finally:
-            rclpy.shutdown()
+        rclpy.spin(node)
 
     def run_launch(shared_state: SharedState):
-        while True:
-            loop = osrf_pycommon.process_utils.get_loop()
-            shared_state.launch_service = LaunchService()
-            shared_state.launch_service.include_launch_description(generate_launch_description())
-            run_async_task = loop.create_task(shared_state.launch_service.run_async())
-            loop.run_until_complete(run_async_task)
-            time.sleep(1)
-            
+        shared_state.launch_service = LaunchService()
+        shared_state.launch_service.include_launch_description(generate_launch_description())
+        shared_state.launch_service.run()
         
     shared_state = SharedState()
     run_ros_thread = Thread(target=run_ros, args=(shared_state,))
