@@ -4,14 +4,18 @@ from threading import Thread
 
 import rclpy
 from rclpy.node import Node
-import osrf_pycommon.process_utils
 from launch import LaunchService, LaunchDescription
 from example_interfaces.srv import Trigger
 from example_interfaces.srv._trigger import Trigger_Request, Trigger_Response
+from launch.logging import get_logger
+from rclpy.executors import ExternalShutdownException
+
+logger = get_logger("launch_with_restart_trigger")
 
 class SharedState:
     def __init__(self):
         self.launch_service = LaunchService()
+        self.restarted_via_trigger = False
         
 class TriggerNode(Node):
     def __init__(
@@ -20,20 +24,27 @@ class TriggerNode(Node):
         node_name: str, 
         trigger_name: str, 
         shared_state: SharedState,
-        sleep_time: float = 2.0
+        sleep_time: float = 1.0
     ):
         super().__init__(node_name, namespace=namespace)
         self.shared_state = shared_state
         self.sleep_time = sleep_time
         self.srv = self.create_service(Trigger, 'restart', self.trigger_callback)
-        self.get_logger().info(f"Enabling restart service - {namespace}/{trigger_name}")
+        logger.info(f"Enabling restart for launch_service - {namespace}/{trigger_name}")
 
     def trigger_callback(self, request: Trigger_Request, response: Trigger_Response):
+        logger.info(f"Restart launch_service triggered")
         if self.shared_state.launch_service is not None:
+            self.shared_state.restarted_via_trigger = True
             self.shared_state.launch_service.shutdown()
             
+        logger.info(f"Restart launch_service completed")
         time.sleep(self.sleep_time)
         response.success = True
+        
+        # Reset the flag
+        self.shared_state.restarted_via_trigger = False
+    
         return response
 
 
@@ -66,21 +77,40 @@ def launch_with_restart_trigger(
     rclpy.init()
     
     def run_ros(shared_state: SharedState):
-        node = TriggerNode(
-            namespace=namespace, 
-            node_name=node_name, 
-            trigger_name=trigger_name, 
-            shared_state=shared_state,
-            sleep_time=sleep_time
-        )
-        rclpy.spin(node)
+        try:
+            node = TriggerNode(
+                namespace=namespace, 
+                node_name=node_name, 
+                trigger_name=trigger_name, 
+                shared_state=shared_state,
+                sleep_time=sleep_time
+            )
+            rclpy.spin(node)
+        except KeyboardInterrupt:
+            pass
+        except ExternalShutdownException:
+            pass
 
     def run_launch(shared_state: SharedState):
-        shared_state.launch_service = LaunchService()
-        shared_state.launch_service.include_launch_description(generate_launch_description())
-        shared_state.launch_service.run()
-        
-    shared_state = SharedState()
-    run_ros_thread = Thread(target=run_ros, args=(shared_state,))
-    run_ros_thread.start()
-    run_launch(shared_state)
+        while True:
+            logger.info("Running launch service...")
+            shared_state.launch_service = LaunchService()
+            shared_state.launch_service.include_launch_description(generate_launch_description())
+            shared_state.launch_service.run()
+            if (shared_state.restarted_via_trigger):
+                logger.info("Launch shutdown due to trigger. Restarting...")
+                time.sleep(1)
+                continue
+            else:
+                logger.info("Launch shutdown due to user.")
+                break
+    
+    try:
+        shared_state = SharedState()
+        run_ros_thread = Thread(target=run_ros, args=(shared_state,))
+        run_ros_thread.start()
+        run_launch(shared_state)
+    except KeyboardInterrupt:
+        pass
+    except ExternalShutdownException:
+        pass
