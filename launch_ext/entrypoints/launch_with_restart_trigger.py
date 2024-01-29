@@ -59,7 +59,6 @@ def launch_with_restart_trigger(
     node_name: str,
     generate_launch_description: Callable[[], LaunchDescription],
     trigger_name="restart",
-    sleep_time: float = 2.0
 ):
     """
     Launches a ROS description with a trigger service that can be used to restart the launch.
@@ -104,9 +103,9 @@ def launch_with_restart_trigger(
             shared_state.launch_service.include_launch_description(generate_launch_description())
             shared_state.launch_service.run()
             if (shared_state.restarted_via_trigger):
-                logger.info(f"Launch shutdown due to trigger. Restarting in {sleep_time}s...")
-                time.sleep(sleep_time)
+                logger.info(f"Launch shutdown due to trigger. Restarting...")
                 shared_state.launch_terminated = True
+                time.sleep(0.5) # Give the "while not self.shared_state.launch_terminated" some time...
                 continue
             else:
                 logger.info("Launch shutdown due to user.")
