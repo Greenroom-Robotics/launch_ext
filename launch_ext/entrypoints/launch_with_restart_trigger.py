@@ -16,6 +16,7 @@ class SharedState:
     def __init__(self):
         self.launch_service = LaunchService()
         self.restarted_via_trigger = False
+        self.launch_terminated = False
         
 class TriggerNode(Node):
     def __init__(
@@ -24,11 +25,9 @@ class TriggerNode(Node):
         node_name: str, 
         trigger_name: str, 
         shared_state: SharedState,
-        sleep_time: float = 1.0
     ):
         super().__init__(node_name, namespace=namespace)
         self.shared_state = shared_state
-        self.sleep_time = sleep_time
         self.srv = self.create_service(Trigger, 'restart', self.trigger_callback)
         logger.info(f"Enabling restart for launch_service - {namespace}/{trigger_name}")
 
@@ -38,12 +37,19 @@ class TriggerNode(Node):
             self.shared_state.restarted_via_trigger = True
             self.shared_state.launch_service.shutdown()
             
-        logger.info(f"Restart launch_service completed")
-        time.sleep(self.sleep_time)
-        response.success = True
-        
-        # Reset the flag
-        self.shared_state.restarted_via_trigger = False
+            # Wait for the launch to terminate
+            while not self.shared_state.launch_terminated:
+                time.sleep(0.1)
+
+            logger.info(f"Restart launch_service completed")
+            response.success = True
+            
+            # Reset the flag
+            self.shared_state.restarted_via_trigger = False
+            
+        else:
+            logger.info(f"Launch service not yet started")
+            response.success = False
     
         return response
 
@@ -83,7 +89,6 @@ def launch_with_restart_trigger(
                 node_name=node_name, 
                 trigger_name=trigger_name, 
                 shared_state=shared_state,
-                sleep_time=sleep_time
             )
             rclpy.spin(node)
         except KeyboardInterrupt:
@@ -94,12 +99,14 @@ def launch_with_restart_trigger(
     def run_launch(shared_state: SharedState):
         while True:
             logger.info("Running launch service...")
+            shared_state.launch_terminated = False
             shared_state.launch_service = LaunchService()
             shared_state.launch_service.include_launch_description(generate_launch_description())
             shared_state.launch_service.run()
             if (shared_state.restarted_via_trigger):
-                logger.info("Launch shutdown due to trigger. Restarting...")
-                time.sleep(1)
+                logger.info(f"Launch shutdown due to trigger. Restarting in {sleep_time}s...")
+                time.sleep(sleep_time)
+                shared_state.launch_terminated = True
                 continue
             else:
                 logger.info("Launch shutdown due to user.")
