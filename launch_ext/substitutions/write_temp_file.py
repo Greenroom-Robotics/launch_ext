@@ -1,6 +1,6 @@
 """Module for the WriteTempFile substitution."""
 
-from typing import Text, List, BinaryIO
+from typing import Text, List, BinaryIO, Optional
 from tempfile import NamedTemporaryFile
 
 from launch.launch_context import LaunchContext
@@ -13,10 +13,11 @@ from launch.utilities import perform_substitutions
 class WriteTempFile(Substitution):
     """Substitution that writes the contents to a named temporary file and returns the file path."""
 
-    def __init__(self, contents: SomeSubstitutionsType) -> None:
+    def __init__(self, contents: SomeSubstitutionsType, path: Optional[str] = None) -> None:
         """Create a WriteTempFile substitution."""
         super().__init__()
         self.__contents = contents
+        self.__path = path
 
     @property
     def contents(self) -> List[Substitution]:
@@ -34,6 +35,13 @@ class WriteTempFile(Substitution):
     def perform(self, context: LaunchContext) -> Text:
         """Perform the substitution by writing the contents to a temporary file and returning the file path."""
 
+        # If a path is provided, write to that
+        if self.__path:
+            with open(self.__path, 'w') as file:
+                self.write(file, context)
+                return self.__path
+
+        # Otherwise, write to a temporary file
         temp_file = NamedTemporaryFile(delete=False)
         self.write(temp_file, context)
         temp_file.flush()
