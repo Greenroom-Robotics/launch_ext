@@ -15,7 +15,7 @@ class ResolveHost(Substitution):
             ip = interface.address
         else:
             ip = socket.gethostbyname(self.__host)
-        self.__logger.info(f"[ResolveHost] interface resolved {self.__host} to {ip}")
+        self.__logger.info(f"Resolved {self.__host} to {ip}")
         return ip
 
     def describe(self):
