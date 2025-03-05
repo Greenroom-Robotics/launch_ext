@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:arg name="discovery_server_ip" default=""/>
+    <xacro:arg name="launch_log_dir" default=""/>
+    <xacro:arg name="own_ip" default="" />
+    <xacro:arg name="discovery_protocol" default="CLIENT" />
+
+    <xacro:property name="discovery_protocol" value="$(arg discovery_protocol)" />
+
+    <profiles>
+        <transport_descriptors>
+            <!-- Set 16MB segment size to reduce fragmentation and improve image FPS -->
+            <transport_descriptor>
+                <transport_id>shm_transport</transport_id>
+                <type>SHM</type>
+                <segment_size>16384000</segment_size>
+            </transport_descriptor>
+
+            <!-- A pretty standard UDP transport -->
+            <transport_descriptor>
+                <transport_id>udp_transport</transport_id>
+                <type>UDPv4</type>
+            </transport_descriptor>
+        </transport_descriptors>
+
+         <participant profile_name="super_client_profile" is_default_profile="true">
+             <rtps>
+                <userTransports>
+                    <transport_id>shm_transport</transport_id>
+                    <transport_id>udp_transport</transport_id>
+                </userTransports>
+                <defaultUnicastLocatorList>
+                    <locator>
+                        <udpv4>
+                            <address>$(arg own_ip)</address>
+                        </udpv4>
+                    </locator>
+                </defaultUnicastLocatorList>
+                <useBuiltinTransports>false</useBuiltinTransports>
+                <xacro:if value="${discovery_protocol != 'SIMPLE'}">
+                    <builtin>
+                        <discovery_config>
+                            <discoveryProtocol>$(arg discovery_protocol)</discoveryProtocol>
+                            <discoveryServersList>
+                                <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+                                    <metatrafficUnicastLocatorList>
+                                        <locator>
+                                            <udpv4>
+                                                <address>$(arg discovery_server_ip)</address>
+                                                <port>11811</port>
+                                            </udpv4>
+                                        </locator>
+                                    </metatrafficUnicastLocatorList>
+                                </RemoteServer>
+                            </discoveryServersList>
+                        </discovery_config>
+                    </builtin>
+                </xacro:if>
+             </rtps>
+         </participant>
+    </profiles>
+
+    <log>
+        <!--
+        Clear consumers
+        -->
+        <use_default>false</use_default>
+
+        <!--
+        StdoutConsumer does not have any properties
+        -->
+        <consumer>
+            <class>StdoutConsumer</class>
+        </consumer>
+
+        <!--
+        StdoutErrConsumer with threshold set to Log::Kind::Error
+        -->
+        <consumer>
+            <class>StdoutErrConsumer</class>
+            <property>
+                <name>stderr_threshold</name>
+                <value>Log::Kind::Info</value>
+            </property>
+        </consumer>
+
+        <!--
+        FileConsumer opening "execution.log" in append mode
+        -->
+        <consumer>
+            <class>FileConsumer</class>
+            <property>
+                <name>filename</name>
+                <value>$(arg launch_log_dir)/fastdds.log</value>
+            </property>
+            <property>
+                <name>append</name>
+                <value>true</value>
+            </property>
+        </consumer>
+
+        <!--
+        ThreadSettings for the log's consumer thread
+        -->
+        <thread_settings>
+            <scheduling_policy>-1</scheduling_policy>
+            <priority>0</priority>
+            <affinity>0</affinity>
+            <stack_size>-1</stack_size>
+        </thread_settings>
+    </log>
+</dds>

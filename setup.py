@@ -1,5 +1,6 @@
 from setuptools import find_packages
 from setuptools import setup
+import glob
 
 package_name = 'launch_ext'
 
@@ -11,6 +12,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
+        ('share/' + package_name + '/config', glob.glob('launch_ext/config/*', recursive=True)),
     ],
     install_requires=[
         'setuptools',

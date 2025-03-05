@@ -6,6 +6,8 @@ from .make_device_node import MakeDeviceNode, MakeDeviceNodeFromPath
 from .write_file import WriteFile
 from .set_launch_configuration_if_not_none import SetLaunchConfigurationIfNotNone
 from .git_repo_info import LogRepoInfo, VerifyRepoCommit, VerifyRepoClean, SaveRepoDiff
+from .configure_fastdds import ConfigureFastDDS
+from .configure_zenoh import ConfigureZenoh
 
 __all__ = [
     'LogRotate',
@@ -19,6 +21,8 @@ __all__ = [
     'VerifyRepoCommit',
     'VerifyRepoClean',
     'SaveRepoDiff',
+    'ConfigureFastDDS',
+    'ConfigureZenoh',
 ]
 
 # hack city hack hack city
