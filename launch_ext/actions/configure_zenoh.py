@@ -58,7 +58,15 @@ class ConfigureZenoh(Action):
 
         return None
 
-    def __init__(self, with_router: bool, router_config: dict = {}, session_config: dict = {}, zenoh_router_config_path="/home/ros/zenoh_router_config.json", zenoh_session_config_path="/home/ros/zenoh_session_config.json", **kwargs):
+    def __init__(
+        self, 
+        with_router: bool = False, 
+        router_config: dict = {}, 
+        session_config: dict = {}, 
+        zenoh_router_config_path="/home/ros/zenoh_router_config.json", 
+        zenoh_session_config_path="/home/ros/zenoh_session_config.json", 
+        **kwargs
+    ):
         """
         Initialize the ConfigureZenoh action.
         

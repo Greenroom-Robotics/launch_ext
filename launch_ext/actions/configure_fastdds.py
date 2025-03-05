@@ -27,11 +27,11 @@ class ConfigureFastDDS(Action):
 
     def __init__(
         self,
-        with_discovery_server: bool,
-        discovery_server_address: str,
-        discovery_server_ip: str,
-        own_ip: str,
-        simple_discovery: bool,
+        with_discovery_server: bool = False,
+        discovery_server_address: str = "0.0.0.0",
+        discovery_server_ip: str = "0.0.0.0",
+        own_ip: str = "0.0.0.0",
+        simple_discovery: bool = True,
         fastdds_profile_path="/home/ros/fastdds_profile.xml",
         fastdds_profile_super_client_path="/home/ros/fastdds_profile_super_client.xml",
         **kwargs
