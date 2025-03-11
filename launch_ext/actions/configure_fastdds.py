@@ -70,7 +70,6 @@ class ConfigureFastDDS(Action):
                 "42100",
             ],
             output={"stderr": ["screen", "log"], "both": ["own_log"]},
-            condition=IfCondition(LaunchConfiguration("with_discovery_server")),
         )
 
         # Create the standard Fast DDS profile (CLIENT or SIMPLE mode)
@@ -120,18 +119,19 @@ class ConfigureFastDDS(Action):
             SetLaunchConfiguration(
                 "fastdds_profile_super_client", fastdds_profile_super_client_path
             ),
-            # Set whether the discovery server should be started
-            SetLaunchConfiguration("with_discovery_server", str(with_discovery_server)),
             # Write the configuration files from templates
             write_fastdds_profile,
             write_fastdds_profile_super_client,
-            # Start the discovery server if requested
-            discovery_server,
             # Configure environment to use the main profile
             SetEnvironmentVariable(
                 "FASTRTPS_DEFAULT_PROFILES_FILE", LaunchConfiguration("fastdds_profile")
             ),
         ]
+        
+        if with_discovery_server:
+            self.actions.append(
+                discovery_server
+            )
 
     def execute(self, context: LaunchContext) -> None:
         """
