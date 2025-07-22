@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for the ExecuteLocal action."""
+"""Module for the ExecuteLocalExt action."""
 
 import asyncio
 import io
@@ -20,7 +20,6 @@ import logging
 import os
 import platform
 import signal
-import threading
 import traceback
 from typing import Any  # noqa: F401
 from typing import Callable
@@ -31,14 +30,10 @@ from typing import Optional
 from typing import Text
 from typing import Tuple  # noqa: F401
 from typing import Union
-from typing import Set
-
-from pathlib import Path
-import psutil
 
 import launch.logging
 
-from osrf_pycommon.process_utils import async_execute_process
+from osrf_pycommon.process_utils import async_execute_process  # type: ignore
 from osrf_pycommon.process_utils import AsyncSubprocessProtocol
 
 from launch.actions.emit_event import EmitEvent
@@ -50,14 +45,14 @@ from launch.conditions import evaluate_condition_expression
 from launch.descriptions import Executable
 from launch.event import Event
 from launch.event_handler import EventHandler
-# from launch.event_handlers import OnProcessExit
-# from launch.event_handlers import OnProcessIO
+from launch.event_handlers import OnProcessExit
+from launch.event_handlers import OnProcessIO
 from launch.event_handlers import OnProcessStart
 from launch.event_handlers import OnShutdown
 from launch.events import matches_action
 from launch.events import Shutdown
-from launch.events.process import ProcessExited
-from launch.events.process import ProcessIO
+# from launch.events.process import ProcessExited
+# from launch.events.process import ProcessIO
 from launch.events.process import ProcessStarted
 from launch.events.process import ProcessStderr
 from launch.events.process import ProcessStdin
@@ -72,16 +67,15 @@ from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.substitution import Substitution  # noqa: F401
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PythonExpression
-from launch.utilities import create_future
 from launch.utilities import is_a_subclass
 from launch.utilities import normalize_to_list_of_substitutions
 from launch.utilities import perform_substitutions
 from launch.utilities.type_utils import normalize_typed_substitution
 from launch.utilities.type_utils import perform_typed_substitution
 
-_global_process_counter_lock = threading.Lock()
-_global_process_counter = 0  # in Python3, this number is unbounded (no rollover)
 
+# we have to include the ProcessIO and ProcessExited events here
+# because they hardcore the type of action
 
 # Copyright 2018-2021 Open Source Robotics Foundation, Inc.
 #
@@ -111,8 +105,6 @@ from launch.events.process import ProcessIO
 from launch.launch_context import LaunchContext
 from launch.some_entities_type import SomeEntitiesType
 
-from launch.events.process import ProcessExited
-
 
 class OnProcessIO(OnActionEventBase):
     """Convenience class for handling I/O from processes via events."""
@@ -123,17 +115,13 @@ class OnProcessIO(OnActionEventBase):
         self,
         *,
         target_action:
-            Optional[Union[Callable[['ExecuteLocalExt'], bool], 'ExecuteLocalExt']] = None,
-        on_stdin: Callable[[ProcessIO], Optional[SomeEntitiesType]] = None,
-        on_stdout: Callable[[ProcessIO], Optional[SomeEntitiesType]] = None,
-        on_stderr: Callable[[ProcessIO], Optional[SomeEntitiesType]] = None,
+            Optional[Union[Callable[['Action'], bool], 'Action']] = None,
+        on_stdin: Optional[Callable[[ProcessIO], Optional[SomeEntitiesType]]] = None,
+        on_stdout: Optional[Callable[[ProcessIO], Optional[SomeEntitiesType]]] = None,
+        on_stderr: Optional[Callable[[ProcessIO], Optional[SomeEntitiesType]]] = None,
         **kwargs
     ) -> None:
         """Create an OnProcessIO event handler."""
-        # from ..actions import ExecuteLocal  # noqa: F811
-        target_action = cast(
-            Optional[Union[Callable[['Action'], bool], 'Action']],
-            target_action)
 
         def handle(event: Event, _: LaunchContext) -> Optional[SomeEntitiesType]:
             event = cast(ProcessIO, event)
@@ -152,6 +140,25 @@ class OnProcessIO(OnActionEventBase):
             target_action_cls=ExecuteLocalExt,
             **kwargs,
         )
+
+
+# Copyright 2018-2021 Open Source Robotics Foundation, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Module for OnProcessExit class."""
+
+from launch.events.process import ProcessExited
 
 class OnProcessExit(OnActionEventBase):
     """
@@ -174,21 +181,25 @@ class OnProcessExit(OnActionEventBase):
         **kwargs
     ) -> None:
         """Create an OnProcessExit event handler."""
-        target_action = cast(
-            Optional[Union[Callable[['Action'], bool], 'Action']],
-            target_action)
-        on_exit = cast(
-            Union[
-                SomeEntitiesType,
-                Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]],
-            on_exit)
         super().__init__(
-            action_matcher=target_action,
-            on_event=on_exit,
+            action_matcher=cast(
+                Optional[Union[Callable[['Action'], bool], 'Action']], target_action
+                ),
+            on_event=cast(
+                Union[SomeEntitiesType,
+                      Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]],
+                on_exit
+                ),
             target_event_cls=ProcessExited,
             target_action_cls=ExecuteLocalExt,
             **kwargs,
         )
+
+
+from typing import Set
+
+from pathlib import Path
+import psutil
 
 
 def get_inodes(pid: int) -> Set[int]:
@@ -245,11 +256,12 @@ class ExecuteLocalExt(Action):
         ]] = None,
         respawn: Union[bool, SomeSubstitutionsType] = False,
         respawn_delay: Optional[float] = None,
+        respawn_max_retries: int = -1,
         wait_on_child_processes: bool = False,
         **kwargs
     ) -> None:
         """
-        Construct an ExecuteLocal action.
+        Construct an ExecuteLocalExt action.
 
         Many arguments are passed eventually to :class:`subprocess.Popen`, so
         see the documentation for the class for additional details.
@@ -310,7 +322,7 @@ class ExecuteLocalExt(Action):
             be overridden with the LaunchConfiguration called 'emulate_tty',
             the value of which is evaluated as true or false according to
             :py:func:`evaluate_condition_expression`.
-            Throws :py:exception:`InvalidConditionExpressionError` if the
+            Throws :py:exc:`InvalidConditionExpressionError` if the
             'emulate_tty' configuration does not represent a boolean.
         :param: output configuration for process output logging. Defaults to 'log'
             i.e. log both stdout and stderr to launch main log file and stderr to
@@ -330,6 +342,8 @@ class ExecuteLocalExt(Action):
         :param: respawn if 'True', relaunch the process that abnormally died.
             Either a boolean or a Substitution to be resolved at runtime. Defaults to 'False'.
         :param: respawn_delay a delay time to relaunch the died process if respawn is 'True'.
+        :param: respawn_max_retries number of times to respawn the process if respawn is 'True'.
+                A negative value will respawn an infinite number of times (default behavior).
         """
         super().__init__(**kwargs)
         self.__process_description = process_description
@@ -337,9 +351,16 @@ class ExecuteLocalExt(Action):
         self.__sigterm_timeout = normalize_to_list_of_substitutions(sigterm_timeout)
         self.__sigkill_timeout = normalize_to_list_of_substitutions(sigkill_timeout)
         self.__emulate_tty = emulate_tty
-        self.__output = os.environ.get('OVERRIDE_LAUNCH_PROCESS_OUTPUT', output)
-        if not isinstance(self.__output, dict):
-            self.__output = normalize_to_list_of_substitutions(self.__output)
+        # Note: we need to use a temporary here so that we don't assign values with different types
+        # to the same variable
+        tmp_output: SomeSubstitutionsType = os.environ.get(
+                'OVERRIDE_LAUNCH_PROCESS_OUTPUT', output
+                )
+        self.__output: Union[dict, List[Substitution]]
+        if not isinstance(tmp_output, dict):
+            self.__output = normalize_to_list_of_substitutions(tmp_output)
+        else:
+            self.__output = tmp_output
         self.__output_format = output_format
 
         self.__log_cmd = log_cmd
@@ -347,7 +368,11 @@ class ExecuteLocalExt(Action):
         self.__on_exit = on_exit
         self.__respawn = normalize_typed_substitution(respawn, bool)
         self.__respawn_delay = respawn_delay
+
         self.__wait_for_child_pids = wait_on_child_processes
+
+        self.__respawn_max_retries = respawn_max_retries
+        self.__respawn_retries = 0
 
         self.__process_event_args = None  # type: Optional[Dict[Text, Any]]
         self._subprocess_protocol = None  # type: Optional[Any]
@@ -370,6 +395,21 @@ class ExecuteLocalExt(Action):
     def shell(self):
         """Getter for shell."""
         return self.__shell
+
+    @property
+    def emulate_tty(self):
+        """Getter for emulate_tty."""
+        return self.__emulate_tty
+
+    @property
+    def sigkill_timeout(self):
+        """Getter for sigkill timeout."""
+        return self.__sigkill_timeout
+
+    @property
+    def sigterm_timeout(self):
+        """Getter for sigterm timeout."""
+        return self.__sigterm_timeout
 
     @property
     def output(self):
@@ -485,12 +525,12 @@ class ExecuteLocalExt(Action):
 
     def __on_process_output(
         self, event: ProcessIO, buffer: io.TextIOBase, logger: logging.Logger
-    ) -> Optional[SomeEntitiesType]:
+    ) -> None:
         to_write = event.text.decode(errors='replace')
         if buffer.closed:
             # buffer was probably closed by __flush_buffers on shutdown.  Output without
             # buffering.
-            buffer.info(
+            logger.info(
                 self.__output_format.format(line=to_write, this=self)
             )
         else:
@@ -536,7 +576,7 @@ class ExecuteLocalExt(Action):
 
     def __on_process_output_cached(
         self, event: ProcessIO, buffer, logger
-    ) -> Optional[SomeEntitiesType]:
+    ) -> None:
         to_write = event.text.decode(errors='replace')
         last_cursor = buffer.tell()
         buffer.seek(0, os.SEEK_END)  # go to end of buffer
@@ -747,9 +787,18 @@ class ExecuteLocalExt(Action):
             self.__logger.error("process has died [pid {}, exit code {}, cmd '{}'].".format(
                 pid, returncode, ' '.join(filter(lambda part: part.strip(), cmd))
             ))
-        await context.emit_event(ProcessExited(returncode=returncode, **process_event_args))
+        await context.emit_event(
+                ProcessExited(returncode=returncode, **process_event_args)
+                )
         # respawn the process if necessary
-        if not context.is_shutdown and not self.__shutdown_future.done() and self.__respawn:
+        if not context.is_shutdown\
+                and self.__shutdown_future is not None\
+                and not self.__shutdown_future.done()\
+                and self.__respawn and \
+                (self.__respawn_max_retries < 0 or
+                 self.__respawn_retries < self.__respawn_max_retries):
+            # Increase the respawn_retries counter
+            self.__respawn_retries += 1
             if self.__respawn_delay is not None and self.__respawn_delay > 0.0:
                 # wait for a timeout(`self.__respawn_delay`) to respawn the process
                 # and handle shutdown event with future(`self.__shutdown_future`)
@@ -777,7 +826,7 @@ class ExecuteLocalExt(Action):
             # pid is added to the dictionary in the connection_made() method of the protocol.
         }
 
-        self.__respawn = perform_typed_substitution(context, self.__respawn, bool)
+        self.__respawn = cast(bool, perform_typed_substitution(context, self.__respawn, bool))
 
     def execute(self, context: LaunchContext) -> Optional[List[LaunchDescriptionEntity]]:
         """
@@ -832,7 +881,9 @@ class ExecuteLocalExt(Action):
             ),
             OnProcessExit(
                 target_action=self,
-                on_exit=self.__on_exit,
+                # TODO: This is also a little strange, OnProcessExit shouldn't ever be able to
+                # take a None for the callable, but this seems to be the default case?
+                on_exit=self.__on_exit,  # type: ignore
             ),
             OnProcessExit(
                 target_action=self,
@@ -843,13 +894,17 @@ class ExecuteLocalExt(Action):
             context.register_event_handler(event_handler)
 
         try:
-            self.__completed_future = create_future(context.asyncio_loop)
-            self.__shutdown_future = create_future(context.asyncio_loop)
+            self.__completed_future = context.asyncio_loop.create_future()
+            self.__shutdown_future = context.asyncio_loop.create_future()
             self.__logger = launch.logging.get_logger(name)
             if not isinstance(self.__output, dict):
-                self.__output = perform_substitutions(context, self.__output)
-            self.__stdout_logger, self.__stderr_logger = \
-                launch.logging.get_output_loggers(name, self.__output)
+                self.__stdout_logger, self.__stderr_logger = \
+                    launch.logging.get_output_loggers(
+                            name, perform_substitutions(context, self.__output)
+                            )
+            else:
+                self.__stdout_logger, self.__stderr_logger = \
+                    launch.logging.get_output_loggers(name, self.__output)
             context.asyncio_loop.create_task(self.__execute_process(context))
         except Exception:
             for event_handler in event_handlers:

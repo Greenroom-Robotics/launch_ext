@@ -9,6 +9,9 @@ from .git_repo_info import LogRepoInfo, VerifyRepoCommit, VerifyRepoClean, SaveR
 from .configure_fastdds import ConfigureFastDDS
 from .configure_zenoh import ConfigureZenoh
 
+from .execute_local import ExecuteLocalExt
+from .execute_process import ExecuteProcessExt
+
 __all__ = [
     'LogRotate',
     'IncludePackageLaunchFile'
@@ -24,12 +27,3 @@ __all__ = [
     'ConfigureFastDDS',
     'ConfigureZenoh',
 ]
-
-# hack city hack hack city
-
-try:
-    from .execute_local import ExecuteLocalExt
-    from .execute_process import ExecuteProcessExt
-    __all__.extend(['ExecuteLocalExt', 'ExecuteProcessExt'])
-except ImportError:
-    pass
