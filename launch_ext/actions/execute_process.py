@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for the ExecuteProcess action."""
+"""Module for the ExecuteProcessExt action."""
 
 import shlex
-import threading
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -23,16 +22,15 @@ from typing import Optional
 from typing import Text
 
 from .execute_local import ExecuteLocalExt
-
+from launch.actions.shutdown_action import Shutdown
 from launch.descriptions import Executable
 from launch.frontend import Entity
 from launch.frontend import expose_action
 from launch.frontend import Parser
 from launch.some_substitutions_type import SomeSubstitutionsType
-from launch.substitutions import TextSubstitution
 
-_global_process_counter_lock = threading.Lock()
-_global_process_counter = 0  # in Python3, this number is unbounded (no rollover)
+from launch.substitution import Substitution
+from launch.substitutions import TextSubstitution
 
 
 @expose_action('executable_wait_on_children')
@@ -45,7 +43,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
         .. doctest::
 
             >>> ld = LaunchDescription([
-            ...     ExecuteProcess(
+            ...     ExecuteProcessExt(
             ...         cmd=['ls', '-las'],
             ...         name='my_ls_process',  # this is optional
             ...         output='both',
@@ -64,7 +62,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
 
             >>> ld = LaunchDescription([
             ...     DeclareLaunchArgument(name='file_path', description='file path to cat'),
-            ...     ExecuteProcess(
+            ...     ExecuteProcessExt(
             ...         # each item of the command arguments' list can be:
             ...         # a string ('cat'),
             ...         # a substitution (`LaunchConfiguration('file_path')`),
@@ -87,11 +85,11 @@ class ExecuteProcessExt(ExecuteLocalExt):
 
             >>> ld = LaunchDescription([
             ...     DeclareLaunchArgument(name='open_gui', default_value='False'),
-            ...     ExecuteProcess(
+            ...     ExecuteProcessExt(
             ...         cmd=['my_cmd', '--open-gui'],
             ...         condition=IfCondition(LaunchConfiguration('open_gui')),
             ...     ),
-            ...     ExecuteProcess(
+            ...     ExecuteProcessExt(
             ...         cmd=['my_cmd'],
             ...         condition=UnlessCondition(LaunchConfiguration('open_gui')),
             ...     ),
@@ -110,7 +108,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
         .. doctest::
 
             >>> ld = LaunchDescription([
-            ...     ExecuteProcess(
+            ...     ExecuteProcessExt(
             ...         cmd=['my_cmd'],
             ...         additional_env={'env_variable': 'env_var_value'},
             ...     ),
@@ -137,7 +135,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
             **kwargs
     ) -> None:
         """
-        Construct an ExecuteProcess action.
+        Construct an ExecuteProcessExt action.
 
         Many arguments are passed eventually to :class:`subprocess.Popen`, so
         see the documentation for the class for additional details.
@@ -208,9 +206,9 @@ class ExecuteProcessExt(ExecuteLocalExt):
             be overridden with the LaunchConfiguration called 'emulate_tty',
             the value of which is evaluated as true or false according to
             :py:func:`evaluate_condition_expression`.
-            Throws :py:exception:`InvalidConditionExpressionError` if the
+            Throws :py:exc:`InvalidConditionExpressionError` if the
             'emulate_tty' configuration does not represent a boolean.
-        :param: prefix a set of commands/arguments to preceed the cmd, used for
+        :param: prefix a set of commands/arguments to precede the cmd, used for
             things like gdb/valgrind and defaults to the LaunchConfiguration
             called 'launch-prefix'. Note that a non-default prefix provided in
             a launch file will override the prefix provided via the `launch-prefix`
@@ -254,7 +252,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
         :returns: a list of command line arguments.
         """
         result_args = []
-        arg = []
+        arg: List[Substitution] = []
 
         def _append_arg():
             nonlocal arg
@@ -264,7 +262,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
             if isinstance(sub, TextSubstitution):
                 tokens = shlex.split(sub.text)
                 if not tokens:
-                    # Sting with just spaces.
+                    # String with just spaces.
                     # Appending args allow splitting two substitutions
                     # separated by a space.
                     # e.g.: `$(subst1 asd) $(subst2 bsd)` will be two separate arguments.
@@ -308,7 +306,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
         ignore: Optional[List[str]] = None
     ):
         """
-        Return the `ExecuteProcess` action and kwargs for constructing it.
+        Return the `ExecuteProcessExt` action and kwargs for constructing it.
 
         :param: ignore A list of arguments that should be ignored while parsing.
             Intended for code reuse in derived classes (e.g.: launch_ros.actions.Node).
@@ -330,6 +328,16 @@ class ExecuteProcessExt(ExecuteLocalExt):
             name = entity.get_attr('name', optional=True)
             if name is not None:
                 kwargs['name'] = parser.parse_substitution(name)
+
+        if 'on_exit' not in ignore:
+            on_exit = entity.get_attr('on_exit', optional=True)
+            if on_exit is not None:
+                if on_exit == 'shutdown':
+                    kwargs['on_exit'] = [Shutdown()]
+                else:
+                    raise ValueError(
+                        'Attribute on_exit of Entity node expected to be shutdown but got `{}`'
+                        'Other on_exit actions not yet supported'.format(on_exit))
 
         if 'prefix' not in ignore:
             prefix = entity.get_attr('launch-prefix', optional=True)
@@ -356,10 +364,35 @@ class ExecuteProcessExt(ExecuteLocalExt):
                     )
                 kwargs['respawn_delay'] = respawn_delay
 
+        if 'sigkill_timeout' not in ignore:
+            sigkill_timeout = entity.get_attr('sigkill_timeout', data_type=float, optional=True)
+            if sigkill_timeout is not None:
+                if sigkill_timeout < 0.0:
+                    raise ValueError(
+                        'Attribute sigkill_timeout of Entity node expected to be '
+                        'a non-negative value but got `{}`'.format(sigkill_timeout)
+                    )
+                kwargs['sigkill_timeout'] = str(sigkill_timeout)
+
+        if 'sigterm_timeout' not in ignore:
+            sigterm_timeout = entity.get_attr('sigterm_timeout', data_type=float, optional=True)
+            if sigterm_timeout is not None:
+                if sigterm_timeout < 0.0:
+                    raise ValueError(
+                        'Attribute sigterm_timeout of Entity node expected to be '
+                        'a non-negative value but got `{}`'.format(sigterm_timeout)
+                    )
+                kwargs['sigterm_timeout'] = str(sigterm_timeout)
+
         if 'shell' not in ignore:
             shell = entity.get_attr('shell', data_type=bool, optional=True)
             if shell is not None:
                 kwargs['shell'] = shell
+
+        if 'emulate_tty' not in ignore:
+            emulate_tty = entity.get_attr('emulate_tty', data_type=bool, optional=True)
+            if emulate_tty is not None:
+                kwargs['emulate_tty'] = emulate_tty
 
         if 'additional_env' not in ignore:
             # Conditions won't be allowed in the `env` tag.
