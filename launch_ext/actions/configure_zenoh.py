@@ -8,8 +8,31 @@ from launch.actions import OpaqueFunction
 from launch.launch_context import LaunchContext
 from launch_ros.actions import Node
 import json
-from collections import ChainMap
 import launch.logging
+
+
+def deep_merge(base: dict, override: dict) -> dict:
+    """
+    Recursively merge two dictionaries, with override values taking precedence.
+
+    Args:
+        base (dict): The base dictionary
+        override (dict): The override dictionary whose values take precedence
+
+    Returns:
+        dict: A new dictionary with merged values
+    """
+    result = base.copy()
+
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            # Recursively merge nested dictionaries
+            result[key] = deep_merge(result[key], value)
+        else:
+            # For all other types (including lists), override completely replaces base
+            result[key] = value
+
+    return result
 
 
 class ConfigureZenoh(Action):
@@ -47,7 +70,7 @@ class ConfigureZenoh(Action):
 
         # Parse the JSON content and apply overrides
         content_json = json.loads(content)
-        content_json = dict(ChainMap(overrides, content_json))
+        content_json = deep_merge(content_json, overrides)
 
         # Write the modified configuration to the destination
         with open(destination, "w") as f:
