@@ -1,4 +1,9 @@
-"""Module for Git Repo based actions."""
+"""Git repository information and verification actions.
+
+This module provides launch actions for working with git repositories,
+including logging repository information, verifying commits, and checking
+repository cleanliness.
+"""
 
 from pathlib import Path
 import git
@@ -10,12 +15,17 @@ from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.utilities import normalize_to_list_of_substitutions, perform_substitutions
 
 
-def get_repo_info(context: LaunchContext, path: SomeSubstitutionsType):
-    """Get the git repo info and log it.
+def get_repo_info(context: LaunchContext, path: SomeSubstitutionsType) -> None:
+    """Get git repository information and log it.
+
+    Logs the repository path, current branch, commit hash, and dirty status.
 
     Args:
-        context (LaunchContext): LaunchContext
-        path (SomeSubstitutionsType): Path to the git repo
+        context: Launch context for performing substitutions
+        path: Path to the git repository
+
+    Returns:
+        None
     """
     path = Path(perform_substitutions(context, path))
     try:
@@ -24,16 +34,20 @@ def get_repo_info(context: LaunchContext, path: SomeSubstitutionsType):
     except Exception as e:
         launch.logging.get_logger('launch.user').warn(f"Error getting git repo info at {path.absolute()}: {e}")
 
-def verify_repo_is_clean(context: LaunchContext, path: SomeSubstitutionsType, pass_on_failure: bool):
-    """Verify that the git repo is clean.
+def verify_repo_is_clean(context: LaunchContext, path: SomeSubstitutionsType, pass_on_failure: bool) -> None:
+    """Verify that the git repository has no uncommitted changes.
 
     Args:
-        context (LaunchContext): LaunchContext
-        path (SomeSubstitutionsType): Path to the git repo
-        pass_on_failure (bool): Whether to pass on failure or raise an exception
+        context: Launch context for performing substitutions
+        path: Path to the git repository
+        pass_on_failure: Whether to continue on failure or raise an exception
 
     Raises:
-        RuntimeError: If the git repo is dirty and pass_on_failure is False
+        RuntimeError: If the repository is dirty and pass_on_failure is False
+        Exception: If repository access fails and pass_on_failure is False
+
+    Returns:
+        None
     """
     path = Path(perform_substitutions(context, path))
     try:
@@ -50,17 +64,21 @@ def verify_repo_is_clean(context: LaunchContext, path: SomeSubstitutionsType, pa
         if not pass_on_failure:
             raise e
 
-def verify_repo_commit(context: LaunchContext, path: SomeSubstitutionsType, commit: SomeSubstitutionsType, pass_on_failure: bool):
-    """Verify that the git repo is at the specified commit.
+def verify_repo_commit(context: LaunchContext, path: SomeSubstitutionsType, commit: SomeSubstitutionsType, pass_on_failure: bool) -> None:
+    """Verify that the git repository is at the specified commit.
 
     Args:
-        context (LaunchContext): LaunchContext
-        path (SomeSubstitutionsType): Path to the git repo
-        commit (SomeSubstitutionsType): Commit to check for
-        pass_on_failure (bool): Whether to pass on failure or raise an exception
+        context: Launch context for performing substitutions
+        path: Path to the git repository
+        commit: Expected commit hash (full or abbreviated)
+        pass_on_failure: Whether to continue on failure or raise an exception
 
     Raises:
-        RuntimeError: If the git repo is not at the specified commit and pass_on_failure is False
+        RuntimeError: If the repository is not at the specified commit and pass_on_failure is False
+        Exception: If repository access fails and pass_on_failure is False
+
+    Returns:
+        None
     """
     path = Path(perform_substitutions(context, path))
     commit = perform_substitutions(context, commit)
@@ -79,28 +97,28 @@ def verify_repo_commit(context: LaunchContext, path: SomeSubstitutionsType, comm
             raise e
 
 def LogRepoInfo(path: SomeSubstitutionsType) -> OpaqueFunction:
-    """Action that logs the git repo info when executed.
+    """Create an action that logs git repository information.
 
     Args:
-        path (SomeSubstitutionsType): Path to the git repo
+        path: Path to the git repository
 
     Returns:
-        OpaqueFunction: OpaqueFunction
+        OpaqueFunction that will log repository information when executed
     """
     path = normalize_to_list_of_substitutions(path)
 
     return OpaqueFunction(function=get_repo_info, kwargs={'path': path})
 
 def VerifyRepoCommit(path: SomeSubstitutionsType, commit: SomeSubstitutionsType, pass_on_failure: bool=True) -> OpaqueFunction:
-    """Action that commits the git repo info when executed.
+    """Create an action that verifies a git repository is at a specific commit.
 
     Args:
-        path (SomeSubstitutionsType): Path to the git repo
-        commit (SomeSubstitutionsType): Commit to check for
-        pass_on_failure (bool, optional): Whether or not to pass on error. Defaults to True.
+        path: Path to the git repository
+        commit: Expected commit hash to verify against
+        pass_on_failure: Whether to continue on verification failure (default: True)
 
     Returns:
-        OpaqueFunction: OpaqueFunction
+        OpaqueFunction that will verify the commit when executed
     """
     
     path = normalize_to_list_of_substitutions(path)
@@ -108,7 +126,18 @@ def VerifyRepoCommit(path: SomeSubstitutionsType, commit: SomeSubstitutionsType,
 
     return OpaqueFunction(function=verify_repo_commit, kwargs={'path': path, 'commit': commit, 'pass_on_failure': pass_on_failure})
 
-def save_git_diff(context: LaunchContext, path: SomeSubstitutionsType, output_file: SomeSubstitutionsType, pass_on_failure: bool):
+def save_git_diff(context: LaunchContext, path: SomeSubstitutionsType, output_file: SomeSubstitutionsType, pass_on_failure: bool) -> None:
+    """Save git diff output to a file.
+
+    Args:
+        context: Launch context for performing substitutions
+        path: Path to the git repository
+        output_file: File path where diff should be saved
+        pass_on_failure: Whether to continue on failure or raise an exception
+
+    Returns:
+        None
+    """
     path = Path(perform_substitutions(context, path))
     output_file = Path(perform_substitutions(context, output_file))
     try:
@@ -121,15 +150,15 @@ def save_git_diff(context: LaunchContext, path: SomeSubstitutionsType, output_fi
             raise e
 
 def SaveRepoDiff(path: SomeSubstitutionsType, output_file: SomeSubstitutionsType, pass_on_failure: bool=True) -> OpaqueFunction:
-    """Action that saves the diff of the repo to file.
+    """Create an action that saves git repository diff to a file.
 
     Args:
-        path (SomeSubstitutionsType): Path to the git repo
-        output_file (SomeSubstitutionsType): Output file
-        pass_on_failure (bool, optional): Whether or not to pass on error. Defaults to True.
+        path: Path to the git repository
+        output_file: File path where diff should be saved
+        pass_on_failure: Whether to continue on failure (default: True)
 
     Returns:
-        OpaqueFunction: OpaqueFunction
+        OpaqueFunction that will save the diff when executed
     """
 
     path = normalize_to_list_of_substitutions(path)
@@ -138,14 +167,14 @@ def SaveRepoDiff(path: SomeSubstitutionsType, output_file: SomeSubstitutionsType
     return OpaqueFunction(function=save_git_diff, kwargs={'path': path, 'output_file': output_file, 'pass_on_failure': pass_on_failure})
 
 def VerifyRepoClean(path: SomeSubstitutionsType, pass_on_failure: bool=True) -> OpaqueFunction:
-    """Action that commits the git repo info when executed.
+    """Create an action that verifies a git repository has no uncommitted changes.
 
     Args:
-        path (SomeSubstitutionsType): Path to the git repo
-        pass_on_failure (bool, optional): Whether or not to pass on error. Defaults to True.
+        path: Path to the git repository
+        pass_on_failure: Whether to continue on verification failure (default: True)
 
     Returns:
-        OpaqueFunction: OpaqueFunction
+        OpaqueFunction that will verify repository cleanliness when executed
     """
 
     path = normalize_to_list_of_substitutions(path)

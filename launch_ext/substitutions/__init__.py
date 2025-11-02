@@ -1,4 +1,9 @@
-"""substitutions Module."""
+"""Launch substitutions for enhanced text processing.
+
+This module provides substitution classes that extend the capabilities of the
+core launch substitution system, including template processing, temporary file
+creation, YAML/JSON conversion, and host resolution utilities.
+"""
 
 from .templated import Templated
 from .unary import Unary
@@ -12,13 +17,12 @@ from .resolve_host import ResolveHost
 YamlToFile = YAMLToFile
 
 __all__ = [
-    'ROSLoggers',
     'Templated',
     'Unary',
     'WriteTempFile',
     'YAMLToFile',
     'YamlToFile',
     'YamlToJson',
-    "Xacro",
-    "ResolveHost"
+    'Xacro',
+    'ResolveHost'
 ]

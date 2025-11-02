@@ -1,4 +1,8 @@
-"""Module for the UnarySubstitution substitution."""
+"""Conditional substitution for ternary-like operations.
+
+This module provides a substitution that evaluates a condition and returns
+one of two possible values based on the result, similar to a ternary operator.
+"""
 
 from typing import Text
 
@@ -9,10 +13,30 @@ from launch.some_substitutions_type import SomeSubstitutionsType
 
 
 class Unary(Substitution):
-    """Substitution that returns one of two results depending on single conditional."""
+    """Conditional substitution that returns different values based on a condition.
+
+    This substitution acts like a ternary operator (condition ? true_value : false_value),
+    evaluating a condition and returning one of two possible substitution results.
+
+    Example:
+        Unary(
+            conditional=IfCondition(LaunchConfiguration('debug')),
+            when_true='debug_value',
+            when_false='release_value'
+        )
+    """
 
     def __init__(self, *, conditional: Condition, when_true: SomeSubstitutionsType, when_false: SomeSubstitutionsType) -> None:
-        """Create a UnarySubstitution."""
+        """Initialize the Unary substitution.
+
+        Args:
+            conditional: Condition to evaluate
+            when_true: Value to return when condition is True
+            when_false: Value to return when condition is False
+
+        Raises:
+            TypeError: If conditional is not a Condition object
+        """
         super().__init__()
 
         if not isinstance(conditional, Condition):
@@ -24,11 +48,22 @@ class Unary(Substitution):
         self.__values = (when_false, when_true)
 
     def describe(self) -> Text:
-        """Return a description of this substitution as a string."""
+        """Return a description of this substitution.
+
+        Returns:
+            String description in ternary operator format for debugging
+        """
         return "'{} ? {} : {}'".format(self.__conditional, self.__values[1], self.__values[0])
 
     def perform(self, context: LaunchContext) -> Text:
-        """Perform the substitution by returning the appropriate substitution."""
+        """Evaluate the condition and return the appropriate value.
+
+        Args:
+            context: Launch context for evaluating conditions and substitutions
+
+        Returns:
+            String result of either when_true or when_false substitution
+        """
 
         from launch.utilities import perform_substitutions  # import here to avoid loop
 

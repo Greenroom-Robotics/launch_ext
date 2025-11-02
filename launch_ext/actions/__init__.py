@@ -1,4 +1,10 @@
-"""actions Module."""
+"""Launch actions for extended functionality.
+
+This module provides additional launch actions beyond those available in the core
+launch package, including process execution extensions, device node creation,
+git repository management, and configuration utilities for middleware like
+Zenoh and FastDDS.
+"""
 
 from .log_rotate import LogRotate
 from .include_package_launch_file import IncludePackageLaunchFile
@@ -14,12 +20,13 @@ from .execute_process import ExecuteProcessExt
 
 __all__ = [
     'LogRotate',
-    'IncludePackageLaunchFile'
+    'IncludePackageLaunchFile',
     'WriteFile',
     'SetLaunchConfigurationIfNotNone',
     'ExecuteLocalExt',
     'ExecuteProcessExt',
     'MakeDeviceNode',
+    'MakeDeviceNodeFromPath',
     'LogRepoInfo',
     'VerifyRepoCommit',
     'VerifyRepoClean',
