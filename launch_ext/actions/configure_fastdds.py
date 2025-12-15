@@ -124,6 +124,11 @@ class ConfigureFastDDS(Action):
             write_fastdds_profile_super_client,
             # Configure environment to use the main profile
             SetEnvironmentVariable(
+                "FASTDDS_DEFAULT_PROFILES_FILE", LaunchConfiguration("fastdds_profile")
+            ),
+
+            # for backwards compatibility with jazzy and fastdds 2.x
+            SetEnvironmentVariable(
                 "FASTRTPS_DEFAULT_PROFILES_FILE", LaunchConfiguration("fastdds_profile")
             ),
         ]
