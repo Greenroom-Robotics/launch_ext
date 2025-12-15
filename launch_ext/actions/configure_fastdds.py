@@ -124,7 +124,7 @@ class ConfigureFastDDS(Action):
             write_fastdds_profile_super_client,
             # Configure environment to use the main profile
             SetEnvironmentVariable(
-                "FASTRTPS_DEFAULT_PROFILES_FILE", LaunchConfiguration("fastdds_profile")
+                "FASTDDS_DEFAULT_PROFILES_FILE", LaunchConfiguration("fastdds_profile")
             ),
         ]
         
