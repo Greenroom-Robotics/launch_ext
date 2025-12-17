@@ -131,6 +131,10 @@ class ConfigureFastDDS(Action):
             SetEnvironmentVariable(
                 "FASTRTPS_DEFAULT_PROFILES_FILE", LaunchConfiguration("fastdds_profile")
             ),
+
+            SetEnvironmentVariable(
+                "ROS2_EASY_MODE", LaunchConfiguration("easy_mode_master_address")
+            )
         ]
         
         if with_discovery_server:
