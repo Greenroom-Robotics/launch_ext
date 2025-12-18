@@ -6,7 +6,6 @@ from launch.substitutions import (
 from launch_ros.substitutions import FindPackageShare
 from launch_ext.actions import WriteFile
 from launch_ext.substitutions import Xacro, ResolveHost
-from launch.conditions import IfCondition
 from launch.action import Action
 from launch.launch_context import LaunchContext
 
