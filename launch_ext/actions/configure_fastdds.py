@@ -65,9 +65,9 @@ class ConfigureFastDDS(Action):
         discovery_server = ExecuteProcess(
             name="discovery_server",
             cmd=[
-                "fast-discovery-server",
-                "--server-id",
-                "0",
+                "fastdds",
+                "discovery",
+                "start",
                 "--udp-address",
                 discovery_server_address,
                 "-p",
