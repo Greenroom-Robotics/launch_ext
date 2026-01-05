@@ -4,8 +4,10 @@
     <xacro:arg name="launch_log_dir" default=""/>
     <xacro:arg name="own_ip" default="" />
     <xacro:arg name="discovery_protocol" default="CLIENT" />
+    <xacro:arg name="ros_distro" default="jazzy" />
 
     <xacro:property name="discovery_protocol" value="$(arg discovery_protocol)" />
+    <xacro:property name="ros_distro" value="$(arg ros_distro)" />
 
     <profiles>
         <transport_descriptors>
@@ -42,16 +44,29 @@
                         <discovery_config>
                             <discoveryProtocol>$(arg discovery_protocol)</discoveryProtocol>
                             <discoveryServersList>
-                                <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
-                                    <metatrafficUnicastLocatorList>
-                                        <locator>
-                                            <udpv4>
-                                                <address>$(arg discovery_server_ip)</address>
-                                                <port>11811</port>
-                                            </udpv4>
-                                        </locator>
-                                    </metatrafficUnicastLocatorList>
-                                </RemoteServer>
+                                <!-- FastDDS 3.x (kilted) uses direct locator format -->
+                                <xacro:if value="${ros_distro == 'kilted'}">
+                                    <locator>
+                                        <udpv4>
+                                            <address>$(arg discovery_server_ip)</address>
+                                            <port>11811</port>
+                                        </udpv4>
+                                    </locator>
+                                </xacro:if>
+
+                                <!-- FastDDS 2.x (jazzy and older) uses RemoteServer wrapper format -->
+                                <xacro:unless value="${ros_distro == 'kilted'}">
+                                    <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+                                        <metatrafficUnicastLocatorList>
+                                            <locator>
+                                                <udpv4>
+                                                    <address>$(arg discovery_server_ip)</address>
+                                                    <port>11811</port>
+                                                </udpv4>
+                                            </locator>
+                                        </metatrafficUnicastLocatorList>
+                                    </RemoteServer>
+                                </xacro:unless>
                             </discoveryServersList>
                         </discovery_config>
                     </builtin>
