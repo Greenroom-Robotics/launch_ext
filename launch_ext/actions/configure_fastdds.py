@@ -67,7 +67,6 @@ class ConfigureFastDDS(Action):
             cmd=[
                 "fastdds",
                 "discovery",
-                "start",
                 "--udp-address",
                 discovery_server_address,
                 "-p",
@@ -76,6 +75,8 @@ class ConfigureFastDDS(Action):
                 discovery_server_address,
                 "--tcp-port",
                 "42100",
+                "--server-id",
+                "0",
             ],
             output={"stderr": ["screen", "log"], "both": ["own_log"]},
         )
