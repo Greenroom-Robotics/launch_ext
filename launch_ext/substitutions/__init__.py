@@ -12,6 +12,7 @@ from .yaml_to_file import YAMLToFile
 from .yaml_to_json import YamlToJson
 from .xacro import Xacro
 from .resolve_host import ResolveHost
+from .superclient_environment import SuperclientEnvironment, superclient_environment
 
 # Alias for consistent naming
 YamlToFile = YAMLToFile
@@ -24,5 +25,7 @@ __all__ = [
     'YamlToFile',
     'YamlToJson',
     'Xacro',
-    'ResolveHost'
+    'ResolveHost',
+    'SuperclientEnvironment',
+    'superclient_environment'
 ]
