@@ -1,3 +1,5 @@
+import os
+
 from launch.actions import ExecuteProcess, SetLaunchConfiguration, SetEnvironmentVariable
 from launch.substitutions import (
     PathJoinSubstitution,
@@ -8,6 +10,13 @@ from launch_ext.actions import WriteFile
 from launch_ext.substitutions import Xacro, ResolveHost
 from launch.action import Action
 from launch.launch_context import LaunchContext
+
+def get_fastdds_default_profile_env_var():
+    return (
+        "FASTDDS_DEFAULT_PROFILES_FILE"
+        if os.environ.get("ROS_DISTRO") == "kilted"
+        else "FASTRTPS_DEFAULT_PROFILES_FILE"
+    )
 
 
 class ConfigureFastDDS(Action):
@@ -86,6 +95,7 @@ class ConfigureFastDDS(Action):
                     "launch_log_dir": LaunchConfiguration("launch_log_dir"),
                     "own_ip": ResolveHost(own_ip),
                     "discovery_protocol": "SIMPLE" if simple_discovery else "CLIENT",
+                    "ros_distro": os.environ.get("ROS_DISTRO", "jazzy"),
                 },
             ),
             LaunchConfiguration("fastdds_profile"),
@@ -106,6 +116,7 @@ class ConfigureFastDDS(Action):
                     "launch_log_dir": LaunchConfiguration("launch_log_dir"),
                     "own_ip": ResolveHost(own_ip),
                     "discovery_protocol": "SIMPLE" if simple_discovery else "SUPER_CLIENT",
+                    "ros_distro": os.environ.get("ROS_DISTRO", "jazzy"),
                 },
             ),
             LaunchConfiguration("fastdds_profile_super_client"),
@@ -123,12 +134,7 @@ class ConfigureFastDDS(Action):
             write_fastdds_profile_super_client,
             # Configure environment to use the main profile
             SetEnvironmentVariable(
-                "FASTDDS_DEFAULT_PROFILES_FILE", LaunchConfiguration("fastdds_profile")
-            ),
-
-            # for backwards compatibility with jazzy and fastdds 2.x
-            SetEnvironmentVariable(
-                "FASTRTPS_DEFAULT_PROFILES_FILE", LaunchConfiguration("fastdds_profile")
+                get_fastdds_default_profile_env_var(), LaunchConfiguration("fastdds_profile")
             ),
         ]
         
