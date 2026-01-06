@@ -12,7 +12,9 @@ from .yaml_to_file import YAMLToFile
 from .yaml_to_json import YamlToJson
 from .xacro import Xacro
 from .resolve_host import ResolveHost
-from .superclient_environment import SuperclientEnvironment, superclient_environment
+from .fastdds_superclient_environment import FastDDSSuperclientEnvironment, get_fastdds_superclient_environment
+from .fastdds_client_environment import FastDDSClientEnvironment, get_fastdds_client_environment
+from .fastdds_env_var import FastDDSEnvVar, get_fastdds_default_profile_env_var
 
 # Alias for consistent naming
 YamlToFile = YAMLToFile
@@ -26,6 +28,10 @@ __all__ = [
     'YamlToJson',
     'Xacro',
     'ResolveHost',
-    'SuperclientEnvironment',
-    'superclient_environment'
+    'FastDDSSuperclientEnvironment',
+    'FastDDSClientEnvironment',
+    'get_fastdds_superclient_environment',
+    'get_fastdds_client_environment',
+    'FastDDSEnvVar',
+    'get_fastdds_default_profile_env_var',
 ]

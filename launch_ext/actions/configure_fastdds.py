@@ -7,16 +7,9 @@ from launch.substitutions import (
 )
 from launch_ros.substitutions import FindPackageShare
 from launch_ext.actions import WriteFile
-from launch_ext.substitutions import Xacro, ResolveHost
+from launch_ext.substitutions import Xacro, ResolveHost, get_fastdds_default_profile_env_var
 from launch.action import Action
 from launch.launch_context import LaunchContext
-
-def get_fastdds_default_profile_env_var():
-    return (
-        "FASTDDS_DEFAULT_PROFILES_FILE"
-        if os.environ.get("ROS_DISTRO") == "kilted"
-        else "FASTRTPS_DEFAULT_PROFILES_FILE"
-    )
 
 
 class ConfigureFastDDS(Action):
