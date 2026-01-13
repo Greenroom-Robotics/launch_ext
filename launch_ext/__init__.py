@@ -4,6 +4,7 @@ from . import actions
 from . import conditions
 from . import substitutions
 from . import entrypoints
+from . import discovery
 
 __all__ = [
     'actions',
@@ -13,4 +14,5 @@ __all__ = [
     'conditions',
     'substitutions',
     'entrypoints'
+    'discovery',
 ]
