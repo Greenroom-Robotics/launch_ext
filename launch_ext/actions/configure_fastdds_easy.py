@@ -1,6 +1,7 @@
 from launch.action import Action
 from launch.actions import SetEnvironmentVariable
 from launch.launch_context import LaunchContext
+from launcH_ext.substitutions import ResolveHost
 
 
 class ConfigureFastDDSEasyMode(Action):
@@ -14,7 +15,7 @@ class ConfigureFastDDSEasyMode(Action):
 
     def __init__(
         self,
-        easy_mode_base_address: str = "127.0.0.1",
+        easy_mode_base_address: str = "0.0.0.0",
         **kwargs,
     ):
         """
@@ -22,7 +23,7 @@ class ConfigureFastDDSEasyMode(Action):
 
         Args:
             easy_mode_base_address (str): Base address for ROS 2 Easy Mode communication.
-                Defaults to "127.0.0.1"
+                Defaults to "0.0.0.0"
             **kwargs: Additional arguments passed to the parent Action class
         """
         super().__init__(**kwargs)
@@ -30,7 +31,7 @@ class ConfigureFastDDSEasyMode(Action):
         self.actions = [
             SetEnvironmentVariable(
                 "ROS2_EASY_MODE",
-                easy_mode_base_address,
+                ResolveHost(easy_mode_base_address),
             )
         ]
 
