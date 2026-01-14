@@ -1,7 +1,7 @@
 from launch.action import Action
 from launch.actions import SetEnvironmentVariable
 from launch.launch_context import LaunchContext
-from launcH_ext.substitutions import ResolveHost
+from launch_ext.substitutions import ResolveHost
 
 
 class ConfigureFastDDSEasyMode(Action):

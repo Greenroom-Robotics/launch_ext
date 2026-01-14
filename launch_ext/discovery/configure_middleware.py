@@ -1,6 +1,9 @@
+import os
+
 from launch.actions import SetLaunchConfiguration
 
-from launch_ext.actions import ConfigureFastDDS, ConfigureZenoh
+from launch_ext.actions import ConfigureFastDDS, ConfigureZenoh, ConfigureFastDDSEasyMode
+
 
 def configure_middleware(config):
     if config.discovery.type == "zenoh":
@@ -9,9 +12,7 @@ def configure_middleware(config):
             ConfigureZenoh(
                 with_router=config.discovery.with_discovery_server,
                 router_config={
-                    "connect": {
-                        "endpoints": [f"tcp/{config.discovery.discovery_server_ip}:7447"]
-                    },
+                    "connect": {"endpoints": [f"tcp/{config.discovery.discovery_server_ip}:7447"]},
                     "listen": {"endpoints": ["tcp/0.0.0.0:7447"]},
                 },
                 session_config={},
@@ -27,6 +28,21 @@ def configure_middleware(config):
                 simple_discovery=False,
             ),
         ]
+
+    if config.discovery.type == "easy":
+        if os.getenv("ROS_DISTRO") == "jazzy":
+            raise RuntimeError(
+                "Fast DDS Easy Mode is not supported on ROS Jazzy, please use a supported discovery mode or ROS version.\n"
+                "HINT: To specify your distro when building or launching set the ROS_DISTRO environment variable "
+                "or use the --ros-distro argument when building lookout"
+            )
+
+        return [
+            ConfigureFastDDSEasyMode(
+                easy_mode_base_address=config.discovery.base_address,
+            ),
+        ]
+
     return [
         ConfigureFastDDS(
             discovery_server_address="0.0.0.0",

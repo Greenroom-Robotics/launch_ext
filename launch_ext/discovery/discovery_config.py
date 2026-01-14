@@ -57,11 +57,3 @@ class DiscoveryEasy(BaseModel):
 
 
 Discovery = DiscoveryZenoh | DiscoveryFastDDS | DiscoverySimple | DiscoveryEasy
-
-
-def discovery_field() -> Field:
-    return Field(
-        default_factory=lambda: DiscoverySimple(),
-        discriminator="type",
-        description="Middleware discovery configuration",
-    )
