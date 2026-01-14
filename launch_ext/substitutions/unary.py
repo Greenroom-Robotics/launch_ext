@@ -26,7 +26,13 @@ class Unary(Substitution):
         )
     """
 
-    def __init__(self, *, conditional: Condition, when_true: SomeSubstitutionsType, when_false: SomeSubstitutionsType) -> None:
+    def __init__(
+        self,
+        *,
+        conditional: Condition,
+        when_true: SomeSubstitutionsType,
+        when_false: SomeSubstitutionsType,
+    ) -> None:
         """Initialize the Unary substitution.
 
         Args:
@@ -41,21 +47,21 @@ class Unary(Substitution):
 
         if not isinstance(conditional, Condition):
             raise TypeError(
-                "UnarySubstitution expected Conditional object got '{}' instead.".format(type(conditional))
+                f"UnarySubstitution expected Conditional object got '{type(conditional)}' instead."
             )
 
         self.__conditional = conditional
         self.__values = (when_false, when_true)
 
-    def describe(self) -> Text:
+    def describe(self) -> str:
         """Return a description of this substitution.
 
         Returns:
             String description in ternary operator format for debugging
         """
-        return "'{} ? {} : {}'".format(self.__conditional, self.__values[1], self.__values[0])
+        return f"'{self.__conditional} ? {self.__values[1]} : {self.__values[0]}'"
 
-    def perform(self, context: LaunchContext) -> Text:
+    def perform(self, context: LaunchContext) -> str:
         """Evaluate the condition and return the appropriate value.
 
         Args:

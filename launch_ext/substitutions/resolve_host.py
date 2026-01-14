@@ -3,10 +3,11 @@ import socket
 from launch.substitution import Substitution
 import launch.logging
 
+
 class ResolveHost(Substitution):
     def __init__(self, host: str):
         self.__host = host
-        self.__logger = launch.logging.get_logger('launch.user')
+        self.__logger = launch.logging.get_logger("launch.user")
 
     def perform(self, context):
         interfaces = psutil.net_if_addrs()
@@ -19,7 +20,7 @@ class ResolveHost(Substitution):
         return ip
 
     def describe(self):
-        return 'ResolveHost(interface={})'.format(self.__node_level.describe())
+        return f"ResolveHost(interface={self.__node_level.describe()})"
 
     def describe_condition(self, condition):
         return self.describe()

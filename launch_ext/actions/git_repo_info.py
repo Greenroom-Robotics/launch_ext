@@ -30,11 +30,18 @@ def get_repo_info(context: LaunchContext, path: SomeSubstitutionsType) -> None:
     path = Path(perform_substitutions(context, path))
     try:
         repo = git.Repo(path, search_parent_directories=True)
-        launch.logging.get_logger('launch.user').info(f"Repository Info | Path: {path.absolute()}, Branch: {repo.active_branch.name}, Commit: {repo.head.object.hexsha + (' (dirty)' if repo.is_dirty() else '')}")
+        launch.logging.get_logger("launch.user").info(
+            f"Repository Info | Path: {path.absolute()}, Branch: {repo.active_branch.name}, Commit: {repo.head.object.hexsha + (' (dirty)' if repo.is_dirty() else '')}"
+        )
     except Exception as e:
-        launch.logging.get_logger('launch.user').warn(f"Error getting git repo info at {path.absolute()}: {e}")
+        launch.logging.get_logger("launch.user").warn(
+            f"Error getting git repo info at {path.absolute()}: {e}"
+        )
 
-def verify_repo_is_clean(context: LaunchContext, path: SomeSubstitutionsType, pass_on_failure: bool) -> None:
+
+def verify_repo_is_clean(
+    context: LaunchContext, path: SomeSubstitutionsType, pass_on_failure: bool
+) -> None:
     """Verify that the git repository has no uncommitted changes.
 
     Args:
@@ -54,17 +61,29 @@ def verify_repo_is_clean(context: LaunchContext, path: SomeSubstitutionsType, pa
         repo = git.Repo(path, search_parent_directories=True)
         if repo.is_dirty():
             if pass_on_failure:
-                launch.logging.get_logger('launch.user').warn(f"Git repo at {path.absolute()} is dirty")
+                launch.logging.get_logger("launch.user").warn(
+                    f"Git repo at {path.absolute()} is dirty"
+                )
             else:
                 raise RuntimeError(f"Git repo at {path.absolute()} is dirty.")
         else:
-            launch.logging.get_logger('launch.user').info(f"Git repo at {path.absolute()} is clean.")
+            launch.logging.get_logger("launch.user").info(
+                f"Git repo at {path.absolute()} is clean."
+            )
     except Exception as e:
-        launch.logging.get_logger('launch.user').warn(f"Error getting git repo info at {path.absolute()}: {e}")
+        launch.logging.get_logger("launch.user").warn(
+            f"Error getting git repo info at {path.absolute()}: {e}"
+        )
         if not pass_on_failure:
             raise e
 
-def verify_repo_commit(context: LaunchContext, path: SomeSubstitutionsType, commit: SomeSubstitutionsType, pass_on_failure: bool) -> None:
+
+def verify_repo_commit(
+    context: LaunchContext,
+    path: SomeSubstitutionsType,
+    commit: SomeSubstitutionsType,
+    pass_on_failure: bool,
+) -> None:
     """Verify that the git repository is at the specified commit.
 
     Args:
@@ -86,15 +105,22 @@ def verify_repo_commit(context: LaunchContext, path: SomeSubstitutionsType, comm
         repo = git.Repo(path, search_parent_directories=True)
         if repo.head.object.hexsha != commit:
             if pass_on_failure:
-                launch.logging.get_logger('launch.user').warn(f"Git repo at {path.absolute()} is not at commit {commit}. Currently at {repo.head.object.hexsha}.")
+                launch.logging.get_logger("launch.user").warn(
+                    f"Git repo at {path.absolute()} is not at commit {commit}. Currently at {repo.head.object.hexsha}."
+                )
             else:
                 raise RuntimeError(f"Git repo at {path.absolute()} is not at commit {commit}.")
         else:
-            launch.logging.get_logger('launch.user').info(f"Git repo at {path.absolute()} is at commit {commit}.")
+            launch.logging.get_logger("launch.user").info(
+                f"Git repo at {path.absolute()} is at commit {commit}."
+            )
     except Exception as e:
-        launch.logging.get_logger('launch.user').warn(f"Error getting git repo info at {path.absolute()}: {e}")
+        launch.logging.get_logger("launch.user").warn(
+            f"Error getting git repo info at {path.absolute()}: {e}"
+        )
         if not pass_on_failure:
             raise e
+
 
 def LogRepoInfo(path: SomeSubstitutionsType) -> OpaqueFunction:
     """Create an action that logs git repository information.
@@ -107,9 +133,12 @@ def LogRepoInfo(path: SomeSubstitutionsType) -> OpaqueFunction:
     """
     path = normalize_to_list_of_substitutions(path)
 
-    return OpaqueFunction(function=get_repo_info, kwargs={'path': path})
+    return OpaqueFunction(function=get_repo_info, kwargs={"path": path})
 
-def VerifyRepoCommit(path: SomeSubstitutionsType, commit: SomeSubstitutionsType, pass_on_failure: bool=True) -> OpaqueFunction:
+
+def VerifyRepoCommit(
+    path: SomeSubstitutionsType, commit: SomeSubstitutionsType, pass_on_failure: bool = True
+) -> OpaqueFunction:
     """Create an action that verifies a git repository is at a specific commit.
 
     Args:
@@ -120,13 +149,22 @@ def VerifyRepoCommit(path: SomeSubstitutionsType, commit: SomeSubstitutionsType,
     Returns:
         OpaqueFunction that will verify the commit when executed
     """
-    
+
     path = normalize_to_list_of_substitutions(path)
     commit = normalize_to_list_of_substitutions(commit)
 
-    return OpaqueFunction(function=verify_repo_commit, kwargs={'path': path, 'commit': commit, 'pass_on_failure': pass_on_failure})
+    return OpaqueFunction(
+        function=verify_repo_commit,
+        kwargs={"path": path, "commit": commit, "pass_on_failure": pass_on_failure},
+    )
 
-def save_git_diff(context: LaunchContext, path: SomeSubstitutionsType, output_file: SomeSubstitutionsType, pass_on_failure: bool) -> None:
+
+def save_git_diff(
+    context: LaunchContext,
+    path: SomeSubstitutionsType,
+    output_file: SomeSubstitutionsType,
+    pass_on_failure: bool,
+) -> None:
     """Save git diff output to a file.
 
     Args:
@@ -142,14 +180,19 @@ def save_git_diff(context: LaunchContext, path: SomeSubstitutionsType, output_fi
     output_file = Path(perform_substitutions(context, output_file))
     try:
         repo = git.Repo(path, search_parent_directories=True)
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             f.write(repo.git.diff())
     except Exception as e:
-        launch.logging.get_logger('launch.user').warn(f"Error getting git repo info at {path.absolute()}: {e}")
+        launch.logging.get_logger("launch.user").warn(
+            f"Error getting git repo info at {path.absolute()}: {e}"
+        )
         if not pass_on_failure:
             raise e
 
-def SaveRepoDiff(path: SomeSubstitutionsType, output_file: SomeSubstitutionsType, pass_on_failure: bool=True) -> OpaqueFunction:
+
+def SaveRepoDiff(
+    path: SomeSubstitutionsType, output_file: SomeSubstitutionsType, pass_on_failure: bool = True
+) -> OpaqueFunction:
     """Create an action that saves git repository diff to a file.
 
     Args:
@@ -164,9 +207,13 @@ def SaveRepoDiff(path: SomeSubstitutionsType, output_file: SomeSubstitutionsType
     path = normalize_to_list_of_substitutions(path)
     output_file = normalize_to_list_of_substitutions(output_file)
 
-    return OpaqueFunction(function=save_git_diff, kwargs={'path': path, 'output_file': output_file, 'pass_on_failure': pass_on_failure})
+    return OpaqueFunction(
+        function=save_git_diff,
+        kwargs={"path": path, "output_file": output_file, "pass_on_failure": pass_on_failure},
+    )
 
-def VerifyRepoClean(path: SomeSubstitutionsType, pass_on_failure: bool=True) -> OpaqueFunction:
+
+def VerifyRepoClean(path: SomeSubstitutionsType, pass_on_failure: bool = True) -> OpaqueFunction:
     """Create an action that verifies a git repository has no uncommitted changes.
 
     Args:
@@ -179,4 +226,6 @@ def VerifyRepoClean(path: SomeSubstitutionsType, pass_on_failure: bool=True) -> 
 
     path = normalize_to_list_of_substitutions(path)
 
-    return OpaqueFunction(function=verify_repo_is_clean, kwargs={'path': path, 'pass_on_failure': pass_on_failure})
+    return OpaqueFunction(
+        function=verify_repo_is_clean, kwargs={"path": path, "pass_on_failure": pass_on_failure}
+    )

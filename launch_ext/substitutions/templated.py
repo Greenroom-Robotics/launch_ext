@@ -14,6 +14,7 @@ from launch.some_substitutions_type import SomeSubstitutionsType
 from launch.utilities import normalize_to_list_of_substitutions
 from launch.utilities import perform_substitutions
 
+
 class Templated(Substitution):
     """Template-based substitution using Python's string.Template syntax.
 
@@ -47,15 +48,15 @@ class Templated(Substitution):
         """
         return self.__template
 
-    def describe(self) -> Text:
+    def describe(self) -> str:
         """Return a description of this substitution as a string.
 
         Returns:
             String representation of the template for debugging purposes
         """
-        return "'{}'".format(self.raw_template)
+        return f"'{self.raw_template}'"
 
-    def perform(self, context: LaunchContext) -> Text:
+    def perform(self, context: LaunchContext) -> str:
         """Perform the substitution by replacing template variables.
 
         Uses Python's string.Template to substitute variables with their

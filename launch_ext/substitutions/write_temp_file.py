@@ -49,14 +49,14 @@ class WriteTempFile(Substitution):
         """
         return normalize_to_list_of_substitutions(self.__contents)
 
-    def describe(self) -> Text:
+    def describe(self) -> str:
         """Return a description of this substitution.
 
         Returns:
             String description of the substitution for debugging
         """
-        contents_str = ' + '.join([sub.describe() for sub in self.contents])
-        return 'WriteTempFile(contents={})'.format(contents_str)
+        contents_str = " + ".join([sub.describe() for sub in self.contents])
+        return f"WriteTempFile(contents={contents_str})"
 
     def write(self, handle: BinaryIO, context: LaunchContext) -> None:
         """Write the contents to a file handle.
@@ -70,7 +70,7 @@ class WriteTempFile(Substitution):
         """
         handle.write(perform_substitutions(context, self.contents).encode())
 
-    def perform(self, context: LaunchContext) -> Text:
+    def perform(self, context: LaunchContext) -> str:
         """Create a temporary file with the content and return its path.
 
         Creates a named temporary file, writes the substituted content to it,

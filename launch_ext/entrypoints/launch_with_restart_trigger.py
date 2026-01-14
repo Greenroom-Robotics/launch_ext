@@ -12,45 +12,47 @@ from rclpy.executors import ExternalShutdownException
 
 logger = get_logger("launch_with_restart_trigger")
 
+
 class SharedState:
     def __init__(self):
         self.launch_service = LaunchService()
         self.restarted_via_trigger = False
         self.launch_terminated = False
-        
+
+
 class TriggerNode(Node):
     def __init__(
-        self, 
-        namespace: str, 
-        node_name: str, 
-        trigger_name: str, 
+        self,
+        namespace: str,
+        node_name: str,
+        trigger_name: str,
         shared_state: SharedState,
     ):
         super().__init__(node_name, namespace=namespace)
         self.shared_state = shared_state
-        self.srv = self.create_service(Trigger, 'restart', self.trigger_callback)
+        self.srv = self.create_service(Trigger, "restart", self.trigger_callback)
         logger.info(f"Enabling restart for launch_service - {namespace}/{trigger_name}")
 
     def trigger_callback(self, request: Trigger_Request, response: Trigger_Response):
-        logger.info(f"Restart launch_service triggered")
+        logger.info("Restart launch_service triggered")
         if self.shared_state.launch_service is not None:
             self.shared_state.restarted_via_trigger = True
             self.shared_state.launch_service.shutdown()
-            
+
             # Wait for the launch to terminate
             while not self.shared_state.launch_terminated:
                 time.sleep(0.1)
 
-            logger.info(f"Restart launch_service completed")
+            logger.info("Restart launch_service completed")
             response.success = True
-            
+
             # Reset the flag
             self.shared_state.restarted_via_trigger = False
-            
+
         else:
-            logger.info(f"Launch service not yet started")
+            logger.info("Launch service not yet started")
             response.success = False
-    
+
         return response
 
 
@@ -62,8 +64,8 @@ def launch_with_restart_trigger(
 ):
     """
     Launches a ROS description with a trigger service that can be used to restart the launch.
-    
-    
+
+
     ```python
     from launch_ext import launch_with_restart_trigger
     from gama_config.gama_vessel import read_vessel_config, Mode
@@ -75,18 +77,18 @@ def launch_with_restart_trigger(
         trigger_name="restart",
         generate_launch_description=generate_launch_description
     )
-    
+
     # This will make a `example_interfaces/srv/Trigger` service available at "/gama_bringup/restart"
     ```
     """
     rclpy.init()
-    
+
     def run_ros(shared_state: SharedState):
         try:
             node = TriggerNode(
-                namespace=namespace, 
-                node_name=node_name, 
-                trigger_name=trigger_name, 
+                namespace=namespace,
+                node_name=node_name,
+                trigger_name=trigger_name,
                 shared_state=shared_state,
             )
             rclpy.spin(node)
@@ -102,15 +104,17 @@ def launch_with_restart_trigger(
             shared_state.launch_service = LaunchService()
             shared_state.launch_service.include_launch_description(generate_launch_description())
             shared_state.launch_service.run()
-            if (shared_state.restarted_via_trigger):
-                logger.info(f"Launch shutdown due to trigger. Restarting...")
+            if shared_state.restarted_via_trigger:
+                logger.info("Launch shutdown due to trigger. Restarting...")
                 shared_state.launch_terminated = True
-                time.sleep(0.5) # Give the "while not self.shared_state.launch_terminated" some time...
+                time.sleep(
+                    0.5
+                )  # Give the "while not self.shared_state.launch_terminated" some time...
                 continue
             else:
                 logger.info("Launch shutdown due to user.")
                 break
-    
+
     try:
         shared_state = SharedState()
         run_ros_thread = Thread(target=run_ros, args=(shared_state,))

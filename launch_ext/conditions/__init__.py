@@ -8,5 +8,5 @@ execution patterns in launch files.
 from .enum_equal import EnumEqual
 
 __all__ = [
-    'EnumEqual',
+    "EnumEqual",
 ]

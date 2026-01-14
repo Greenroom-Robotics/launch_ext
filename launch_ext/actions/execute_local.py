@@ -51,6 +51,7 @@ from launch.event_handlers import OnProcessStart
 from launch.event_handlers import OnShutdown
 from launch.events import matches_action
 from launch.events import Shutdown
+
 # from launch.events.process import ProcessExited
 # from launch.events.process import ProcessIO
 from launch.events.process import ProcessStarted
@@ -114,12 +115,11 @@ class OnProcessIO(OnActionEventBase):
     def __init__(
         self,
         *,
-        target_action:
-            Optional[Union[Callable[['Action'], bool], 'Action']] = None,
+        target_action: Optional[Union[Callable[["Action"], bool], "Action"]] = None,
         on_stdin: Optional[Callable[[ProcessIO], Optional[SomeEntitiesType]]] = None,
         on_stdout: Optional[Callable[[ProcessIO], Optional[SomeEntitiesType]]] = None,
         on_stderr: Optional[Callable[[ProcessIO], Optional[SomeEntitiesType]]] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Create an OnProcessIO event handler."""
 
@@ -160,6 +160,7 @@ class OnProcessIO(OnActionEventBase):
 
 from launch.events.process import ProcessExited
 
+
 class OnProcessExit(OnActionEventBase):
     """
     Convenience class for handling a process exited event.
@@ -171,25 +172,25 @@ class OnProcessExit(OnActionEventBase):
     def __init__(
         self,
         *,
-        target_action:
-            Optional[Union[Callable[['ExecuteLocalExt'], bool], 'ExecuteLocalExt']] = None,
-        on_exit:
-            Union[
-                SomeEntitiesType,
-                Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]]
-            ],
-        **kwargs
+        target_action: Optional[
+            Union[Callable[["ExecuteLocalExt"], bool], "ExecuteLocalExt"]
+        ] = None,
+        on_exit: Union[
+            SomeEntitiesType, Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]]
+        ],
+        **kwargs,
     ) -> None:
         """Create an OnProcessExit event handler."""
         super().__init__(
             action_matcher=cast(
-                Optional[Union[Callable[['Action'], bool], 'Action']], target_action
-                ),
+                Optional[Union[Callable[["Action"], bool], "Action"]], target_action
+            ),
             on_event=cast(
-                Union[SomeEntitiesType,
-                      Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]],
-                on_exit
-                ),
+                Union[
+                    SomeEntitiesType, Callable[[Event, LaunchContext], Optional[SomeEntitiesType]]
+                ],
+                on_exit,
+            ),
             target_event_cls=ProcessExited,
             target_action_cls=ExecuteLocalExt,
             **kwargs,
@@ -212,7 +213,7 @@ def get_inodes(pid: int) -> Set[int]:
             fdinfo = [s.split(":\t") for s in fdinfo]
             fdinfo = {s[0]: int(s[1]) for s in fdinfo}
 
-            inodes.add(fdinfo['ino'])
+            inodes.add(fdinfo["ino"])
         except FileNotFoundError as e:
             continue
         except PermissionError as e:
@@ -225,11 +226,11 @@ def get_inodes(pid: int) -> Set[int]:
 
 def get_pids_with_inodes(inodes: Set[int]) -> Set[int]:
     pids = set()
-    
+
     for pid in psutil.pids():
         if inodes & get_inodes(pid):
             pids.add(pid)
-        
+
     return pids
 
 
@@ -241,24 +242,24 @@ class ExecuteLocalExt(Action):
         *,
         process_description: Executable,
         shell: bool = False,
-        sigterm_timeout: SomeSubstitutionsType = LaunchConfiguration(
-            'sigterm_timeout', default=5),
-        sigkill_timeout: SomeSubstitutionsType = LaunchConfiguration(
-            'sigkill_timeout', default=5),
+        sigterm_timeout: SomeSubstitutionsType = LaunchConfiguration("sigterm_timeout", default=5),
+        sigkill_timeout: SomeSubstitutionsType = LaunchConfiguration("sigkill_timeout", default=5),
         emulate_tty: bool = False,
-        output: SomeSubstitutionsType = 'log',
-        output_format: Text = '[{this.process_description.final_name}] {line}',
+        output: SomeSubstitutionsType = "log",
+        output_format: str = "[{this.process_description.final_name}] {line}",
         cached_output: bool = False,
         log_cmd: bool = False,
-        on_exit: Optional[Union[
-            SomeEntitiesType,
-            Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]]
-        ]] = None,
+        on_exit: Optional[
+            Union[
+                SomeEntitiesType,
+                Callable[[ProcessExited, LaunchContext], Optional[SomeEntitiesType]],
+            ]
+        ] = None,
         respawn: Union[bool, SomeSubstitutionsType] = False,
         respawn_delay: Optional[float] = None,
         respawn_max_retries: int = -1,
         wait_on_child_processes: bool = False,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Construct an ExecuteLocalExt action.
@@ -354,8 +355,8 @@ class ExecuteLocalExt(Action):
         # Note: we need to use a temporary here so that we don't assign values with different types
         # to the same variable
         tmp_output: SomeSubstitutionsType = os.environ.get(
-                'OVERRIDE_LAUNCH_PROCESS_OUTPUT', output
-                )
+            "OVERRIDE_LAUNCH_PROCESS_OUTPUT", output
+        )
         self.__output: Union[dict, List[Substitution]]
         if not isinstance(tmp_output, dict):
             self.__output = normalize_to_list_of_substitutions(tmp_output)
@@ -442,66 +443,67 @@ class ExecuteLocalExt(Action):
             return None
 
         # Defer shut down if the process is scheduled to be started
-        if (self.process_details is None or self._subprocess_transport is None):
+        if self.process_details is None or self._subprocess_transport is None:
             # Do not set shutdown result, as event is postponed
             context.register_event_handler(
                 OnProcessStart(
-                    on_start=lambda event, context:
-                    self._shutdown_process(context, send_sigint=send_sigint)))
+                    on_start=lambda event, context: self._shutdown_process(
+                        context, send_sigint=send_sigint
+                    )
+                )
+            )
             return None
 
         self.__shutdown_future.set_result(None)
 
         # Otherwise process is still running, start the shutdown procedures.
-        context.extend_locals({'process_name': self.process_details['name']})
+        context.extend_locals({"process_name": self.process_details["name"]})
         actions_to_return = self.__get_shutdown_timer_actions()
         if send_sigint:
             actions_to_return.append(self.__get_sigint_event())
         return actions_to_return
 
-    def __on_shutdown_process_event(
-        self,
-        context: LaunchContext
-    ) -> Optional[LaunchDescription]:
+    def __on_shutdown_process_event(self, context: LaunchContext) -> Optional[LaunchDescription]:
         typed_event = cast(ShutdownProcess, context.locals.event)
         if not typed_event.process_matcher(self):
             # this event whas not intended for this process
             return None
         return self._shutdown_process(context, send_sigint=True)
 
-    def __on_signal_process_event(
-        self,
-        context: LaunchContext
-    ) -> Optional[LaunchDescription]:
+    def __on_signal_process_event(self, context: LaunchContext) -> Optional[LaunchDescription]:
         typed_event = cast(SignalProcess, context.locals.event)
         if not typed_event.process_matcher(self):
             # this event whas not intended for this process
             return None
         if self.process_details is None:
-            raise RuntimeError('Signal event received before execution.')
+            raise RuntimeError("Signal event received before execution.")
         if self._subprocess_transport is None:
-            raise RuntimeError('Signal event received before subprocess transport available.')
+            raise RuntimeError("Signal event received before subprocess transport available.")
         if self._subprocess_protocol.complete.done():
             # the process is done or is cleaning up, no need to signal
             self.__logger.debug(
                 "signal '{}' not set to '{}' because it is already closing".format(
-                    typed_event.signal_name, self.process_details['name']),
+                    typed_event.signal_name, self.process_details["name"]
+                ),
             )
             return None
-        if platform.system() == 'Windows' and typed_event.signal_name == 'SIGINT':
+        if platform.system() == "Windows" and typed_event.signal_name == "SIGINT":
             # TODO(wjwwood): remove this when/if SIGINT is fixed on Windows
             self.__logger.warning(
-                "'SIGINT' sent to process[{}] not supported on Windows, escalating to 'SIGTERM'"
-                .format(self.process_details['name']),
+                "'SIGINT' sent to process[{}] not supported on Windows, escalating to 'SIGTERM'".format(
+                    self.process_details["name"]
+                ),
             )
             typed_event = SignalProcess(
-                signal_number=signal.SIGTERM,
-                process_matcher=lambda process: True)
-        self.__logger.info("sending signal '{}' to process[{}]".format(
-            typed_event.signal_name, self.process_details['name']
-        ))
+                signal_number=signal.SIGTERM, process_matcher=lambda process: True
+            )
+        self.__logger.info(
+            "sending signal '{}' to process[{}]".format(
+                typed_event.signal_name, self.process_details["name"]
+            )
+        )
         try:
-            if typed_event.signal_name == 'SIGKILL':
+            if typed_event.signal_name == "SIGKILL":
                 self._subprocess_transport.kill()  # works on both Windows and POSIX
                 return None
             self._subprocess_transport.send_signal(typed_event.signal)
@@ -509,16 +511,13 @@ class ExecuteLocalExt(Action):
         except ProcessLookupError:
             self.__logger.debug(
                 "signal '{}' not sent to '{}' because it has closed already".format(
-                    typed_event.signal_name, self.process_details['name']
+                    typed_event.signal_name, self.process_details["name"]
                 )
             )
 
-    def __on_process_stdin(
-        self,
-        event: ProcessIO
-    ) -> Optional[SomeEntitiesType]:
+    def __on_process_stdin(self, event: ProcessIO) -> Optional[SomeEntitiesType]:
         self.__logger.warning(
-            "in ExecuteProcess('{}').__on_process_stdin_event()".format(id(self)),
+            f"in ExecuteProcess('{id(self)}').__on_process_stdin_event()",
         )
         cast(ProcessStdin, event)
         return None
@@ -526,13 +525,11 @@ class ExecuteLocalExt(Action):
     def __on_process_output(
         self, event: ProcessIO, buffer: io.TextIOBase, logger: logging.Logger
     ) -> None:
-        to_write = event.text.decode(errors='replace')
+        to_write = event.text.decode(errors="replace")
         if buffer.closed:
             # buffer was probably closed by __flush_buffers on shutdown.  Output without
             # buffering.
-            logger.info(
-                self.__output_format.format(line=to_write, this=self)
-            )
+            logger.info(self.__output_format.format(line=to_write, this=self))
         else:
             buffer.write(to_write)
             buffer.seek(0)
@@ -540,7 +537,7 @@ class ExecuteLocalExt(Action):
             for line in buffer:
                 if line.endswith(os.linesep):
                     logger.info(
-                        self.__output_format.format(line=line[:-len(os.linesep)], this=self)
+                        self.__output_format.format(line=line[: -len(os.linesep)], this=self)
                     )
                 else:
                     last_line = line
@@ -552,16 +549,12 @@ class ExecuteLocalExt(Action):
 
     def __flush_buffers(self, event, context):
         line = self.__stdout_buffer.getvalue()
-        if line != '':
-            self.__stdout_logger.info(
-                self.__output_format.format(line=line, this=self)
-            )
+        if line != "":
+            self.__stdout_logger.info(self.__output_format.format(line=line, this=self))
 
         line = self.__stderr_buffer.getvalue()
-        if line != '':
-            self.__stderr_logger.info(
-                self.__output_format.format(line=line, this=self)
-            )
+        if line != "":
+            self.__stderr_logger.info(self.__output_format.format(line=line, this=self))
 
         # the respawned process needs to reuse these StringIO resources,
         # close them only after receiving the shutdown
@@ -574,10 +567,8 @@ class ExecuteLocalExt(Action):
             self.__stderr_buffer.seek(0)
             self.__stderr_buffer.truncate(0)
 
-    def __on_process_output_cached(
-        self, event: ProcessIO, buffer, logger
-    ) -> None:
-        to_write = event.text.decode(errors='replace')
+    def __on_process_output_cached(self, event: ProcessIO, buffer, logger) -> None:
+        to_write = event.text.decode(errors="replace")
         last_cursor = buffer.tell()
         buffer.seek(0, os.SEEK_END)  # go to end of buffer
         buffer.write(to_write)
@@ -587,21 +578,15 @@ class ExecuteLocalExt(Action):
             if not line.endswith(os.linesep):
                 break
             new_cursor = buffer.tell()
-            logger.info(
-                self.__output_format.format(line=line[:-len(os.linesep)], this=self)
-            )
+            logger.info(self.__output_format.format(line=line[: -len(os.linesep)], this=self))
         buffer.seek(new_cursor)
 
     def __flush_cached_buffers(self, event, context):
         for line in self.__stdout_buffer:
-            self.__stdout_logger.info(
-                self.__output_format.format(line=line, this=self)
-            )
+            self.__stdout_logger.info(self.__output_format.format(line=line, this=self))
 
         for line in self.__stderr_buffer:
-            self.__stderr_logger.info(
-                self.__output_format.format(line=line, this=self)
-            )
+            self.__stderr_logger.info(self.__output_format.format(line=line, this=self))
 
     def __on_shutdown(self, event: Event, context: LaunchContext) -> Optional[SomeEntitiesType]:
         due_to_sigint = cast(Shutdown, event).due_to_sigint
@@ -611,31 +596,37 @@ class ExecuteLocalExt(Action):
         )
 
     def __get_shutdown_timer_actions(self) -> List[Action]:
-        base_msg = \
+        base_msg = (
             "process[{}] failed to terminate '{}' seconds after receiving '{}', escalating to '{}'"
+        )
 
         def printer(context, msg, timeout_substitutions):
-            self.__logger.error(msg.format(
-                context.locals.process_name,
-                perform_substitutions(context, timeout_substitutions),
-            ))
+            self.__logger.error(
+                msg.format(
+                    context.locals.process_name,
+                    perform_substitutions(context, timeout_substitutions),
+                )
+            )
 
         sigterm_timeout = self.__sigterm_timeout
-        sigkill_timeout = [PythonExpression(
-            ('float(', *self.__sigterm_timeout, ') + float(', *self.__sigkill_timeout, ')')
-        )]
+        sigkill_timeout = [
+            PythonExpression(
+                ("float(", *self.__sigterm_timeout, ") + float(", *self.__sigkill_timeout, ")")
+            )
+        ]
         # Setup a timer to send us a SIGTERM if we don't shutdown quickly.
         self.__sigterm_timer = TimerAction(
             period=sigterm_timeout,
             actions=[
                 OpaqueFunction(
                     function=printer,
-                    args=(base_msg.format('{}', '{}', 'SIGINT', 'SIGTERM'), sigterm_timeout)
+                    args=(base_msg.format("{}", "{}", "SIGINT", "SIGTERM"), sigterm_timeout),
                 ),
-                EmitEvent(event=SignalProcess(
-                    signal_number=signal.SIGTERM,
-                    process_matcher=matches_action(self)
-                )),
+                EmitEvent(
+                    event=SignalProcess(
+                        signal_number=signal.SIGTERM, process_matcher=matches_action(self)
+                    )
+                ),
             ],
             cancel_on_shutdown=False,
         )
@@ -645,12 +636,13 @@ class ExecuteLocalExt(Action):
             actions=[
                 OpaqueFunction(
                     function=printer,
-                    args=(base_msg.format('{}', '{}', 'SIGTERM', 'SIGKILL'), sigkill_timeout)
+                    args=(base_msg.format("{}", "{}", "SIGTERM", "SIGKILL"), sigkill_timeout),
                 ),
-                EmitEvent(event=SignalProcess(
-                    signal_number='SIGKILL',
-                    process_matcher=matches_action(self)
-                ))
+                EmitEvent(
+                    event=SignalProcess(
+                        signal_number="SIGKILL", process_matcher=matches_action(self)
+                    )
+                ),
             ],
             cancel_on_shutdown=False,
         )
@@ -660,10 +652,12 @@ class ExecuteLocalExt(Action):
         ]
 
     def __get_sigint_event(self):
-        return EmitEvent(event=SignalProcess(
-            signal_number=signal.SIGINT,
-            process_matcher=matches_action(self),
-        ))
+        return EmitEvent(
+            event=SignalProcess(
+                signal_number=signal.SIGINT,
+                process_matcher=matches_action(self),
+            )
+        )
 
     def __cleanup(self):
         # Cancel any pending timers we started.
@@ -680,22 +674,22 @@ class ExecuteLocalExt(Action):
     class __ProcessProtocol(AsyncSubprocessProtocol):
         def __init__(
             self,
-            action: 'ExecuteLocalExt',
+            action: "ExecuteLocalExt",
             context: LaunchContext,
             process_event_args: Dict,
-            **kwargs
+            **kwargs,
         ) -> None:
             super().__init__(**kwargs)
             self.__context = context
             self.__process_event_args = process_event_args
-            self.__logger = launch.logging.get_logger(process_event_args['name'])
+            self.__logger = launch.logging.get_logger(process_event_args["name"])
 
         def connection_made(self, transport):
             self.__logger.info(
-                'process started with pid [{}]'.format(transport.get_pid()),
+                f"process started with pid [{transport.get_pid()}]",
             )
             super().connection_made(transport)
-            self.__process_event_args['pid'] = transport.get_pid()
+            self.__process_event_args["pid"] = transport.get_pid()
 
         def on_stdout_received(self, data: bytes) -> None:
             self.__context.emit_event_sync(ProcessStdout(text=data, **self.__process_event_args))
@@ -710,11 +704,11 @@ class ExecuteLocalExt(Action):
 
             if len(child_pids) == 0:
                 break
-            
+
             pids.update(child_pids)
             self.__logger.debug(
-                'process has child processes with PIDs: {}'.format(
-                    ', '.join(map(str, child_pids)),
+                "process has child processes with PIDs: {}".format(
+                    ", ".join(map(str, child_pids)),
                 )
             )
 
@@ -725,25 +719,25 @@ class ExecuteLocalExt(Action):
     async def __execute_process(self, context: LaunchContext) -> None:
         process_event_args = self.__process_event_args
         if process_event_args is None:
-            raise RuntimeError('process_event_args unexpectedly None')
+            raise RuntimeError("process_event_args unexpectedly None")
 
-        cmd = process_event_args['cmd']
-        cwd = process_event_args['cwd']
-        env = process_event_args['env']
+        cmd = process_event_args["cmd"]
+        cwd = process_event_args["cwd"]
+        env = process_event_args["env"]
         if self.__log_cmd:
-            self.__logger.info("process details: cmd='{}', cwd='{}', custom_env?={}".format(
-                ' '.join(filter(lambda part: part.strip(), cmd)),
-                cwd,
-                'True' if env is not None else 'False'
-            ))
+            self.__logger.info(
+                "process details: cmd='{}', cwd='{}', custom_env?={}".format(
+                    " ".join(filter(lambda part: part.strip(), cmd)),
+                    cwd,
+                    "True" if env is not None else "False",
+                )
+            )
 
         emulate_tty = self.__emulate_tty
-        if 'emulate_tty' in context.launch_configurations:
+        if "emulate_tty" in context.launch_configurations:
             emulate_tty = evaluate_condition_expression(
                 context,
-                normalize_to_list_of_substitutions(
-                    context.launch_configurations['emulate_tty']
-                ),
+                normalize_to_list_of_substitutions(context.launch_configurations["emulate_tty"]),
             )
 
         try:
@@ -759,9 +753,9 @@ class ExecuteLocalExt(Action):
                 stderr_to_stdout=False,
             )
         except Exception:
-            self.__logger.error('exception occurred while executing process:\n{}'.format(
-                traceback.format_exc()
-            ))
+            self.__logger.error(
+                "exception occurred while executing process:\n{}".format(traceback.format_exc())
+            )
             self.__cleanup()
             return
 
@@ -770,7 +764,7 @@ class ExecuteLocalExt(Action):
 
         # get inode[s] for stdout and stderr for the PID
         fd_inodes = get_inodes(pid)
-        self.__logger.debug(f'pid has stdout/stderr inodes: {fd_inodes}')
+        self.__logger.debug(f"pid has stdout/stderr inodes: {fd_inodes}")
 
         await context.emit_event(ProcessStarted(**process_event_args))
 
@@ -779,34 +773,37 @@ class ExecuteLocalExt(Action):
         if self.__wait_for_child_pids:
             self.__logger.info("waiting for child processes with parent's stdin/stdout pipes.")
             child_pids = await self._wait_for_inodes_to_expire(fd_inodes)
-            self.__logger.info("child processes [pids {}] have exited.".format(",".join(map(str, child_pids))))
+            self.__logger.info(
+                "child processes [pids {}] have exited.".format(",".join(map(str, child_pids)))
+            )
 
         if returncode == 0:
-            self.__logger.info('process has finished cleanly [pid {}]'.format(pid))
+            self.__logger.info(f"process has finished cleanly [pid {pid}]")
         else:
-            self.__logger.error("process has died [pid {}, exit code {}, cmd '{}'].".format(
-                pid, returncode, ' '.join(filter(lambda part: part.strip(), cmd))
-            ))
-        await context.emit_event(
-                ProcessExited(returncode=returncode, **process_event_args)
+            self.__logger.error(
+                "process has died [pid {}, exit code {}, cmd '{}'].".format(
+                    pid, returncode, " ".join(filter(lambda part: part.strip(), cmd))
                 )
+            )
+        await context.emit_event(ProcessExited(returncode=returncode, **process_event_args))
         # respawn the process if necessary
-        if not context.is_shutdown\
-                and self.__shutdown_future is not None\
-                and not self.__shutdown_future.done()\
-                and self.__respawn and \
-                (self.__respawn_max_retries < 0 or
-                 self.__respawn_retries < self.__respawn_max_retries):
+        if (
+            not context.is_shutdown
+            and self.__shutdown_future is not None
+            and not self.__shutdown_future.done()
+            and self.__respawn
+            and (
+                self.__respawn_max_retries < 0
+                or self.__respawn_retries < self.__respawn_max_retries
+            )
+        ):
             # Increase the respawn_retries counter
             self.__respawn_retries += 1
             if self.__respawn_delay is not None and self.__respawn_delay > 0.0:
                 # wait for a timeout(`self.__respawn_delay`) to respawn the process
                 # and handle shutdown event with future(`self.__shutdown_future`)
                 # to make sure `ros2 launch` exit in time
-                await asyncio.wait(
-                    (self.__shutdown_future,),
-                    timeout=self.__respawn_delay
-                )
+                await asyncio.wait((self.__shutdown_future,), timeout=self.__respawn_delay)
             if not self.__shutdown_future.done():
                 context.asyncio_loop.create_task(self.__execute_process(context))
                 return
@@ -818,11 +815,11 @@ class ExecuteLocalExt(Action):
 
         # store packed kwargs for all ProcessEvent based events
         self.__process_event_args = {
-            'action': self,
-            'name': self.__process_description.final_name,
-            'cmd': self.__process_description.final_cmd,
-            'cwd': self.__process_description.final_cwd,
-            'env': self.__process_description.final_env,
+            "action": self,
+            "name": self.__process_description.final_name,
+            "cmd": self.__process_description.final_cmd,
+            "cwd": self.__process_description.final_cwd,
+            "env": self.__process_description.final_env,
             # pid is added to the dictionary in the connection_made() method of the protocol.
         }
 
@@ -872,9 +869,11 @@ class ExecuteLocalExt(Action):
                 target_action=self,
                 on_stdin=self.__on_process_stdin,
                 on_stdout=lambda event: on_output_method(
-                    event, self.__stdout_buffer, self.__stdout_logger),
+                    event, self.__stdout_buffer, self.__stdout_logger
+                ),
                 on_stderr=lambda event: on_output_method(
-                    event, self.__stderr_buffer, self.__stderr_logger),
+                    event, self.__stderr_buffer, self.__stderr_logger
+                ),
             ),
             OnShutdown(
                 on_shutdown=self.__on_shutdown,
@@ -898,13 +897,13 @@ class ExecuteLocalExt(Action):
             self.__shutdown_future = context.asyncio_loop.create_future()
             self.__logger = launch.logging.get_logger(name)
             if not isinstance(self.__output, dict):
-                self.__stdout_logger, self.__stderr_logger = \
-                    launch.logging.get_output_loggers(
-                            name, perform_substitutions(context, self.__output)
-                            )
+                self.__stdout_logger, self.__stderr_logger = launch.logging.get_output_loggers(
+                    name, perform_substitutions(context, self.__output)
+                )
             else:
-                self.__stdout_logger, self.__stderr_logger = \
-                    launch.logging.get_output_loggers(name, self.__output)
+                self.__stdout_logger, self.__stderr_logger = launch.logging.get_output_loggers(
+                    name, self.__output
+                )
             context.asyncio_loop.create_task(self.__execute_process(context))
         except Exception:
             for event_handler in event_handlers:
@@ -924,8 +923,9 @@ class ExecuteLocalExt(Action):
         """
         if not self.__cached_output:
             raise RuntimeError(
-                'cached output must be true to be able to get stdout,'
-                f" proc '{self.__process_description.name}'")
+                "cached output must be true to be able to get stdout,"
+                f" proc '{self.__process_description.name}'"
+            )
         return self.__stdout_buffer.getvalue()
 
     def get_stderr(self):
@@ -936,8 +936,9 @@ class ExecuteLocalExt(Action):
         """
         if not self.__cached_output:
             raise RuntimeError(
-                'cached output must be true to be able to get stderr, proc'
-                f" '{self.__process_description.name}'")
+                "cached output must be true to be able to get stderr, proc"
+                f" '{self.__process_description.name}'"
+            )
         return self.__stderr_buffer.getvalue()
 
     @property

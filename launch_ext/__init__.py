@@ -7,12 +7,11 @@ from . import entrypoints
 from . import discovery
 
 __all__ = [
-    'actions',
+    "actions",
     # 'descriptions',
     # 'event_handlers',
     # 'events',
-    'conditions',
-    'substitutions',
-    'entrypoints'
-    'discovery',
+    "conditions",
+    "substitutions",
+    "entrypoints" "discovery",
 ]

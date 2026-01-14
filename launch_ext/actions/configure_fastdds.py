@@ -15,11 +15,11 @@ from launch.launch_context import LaunchContext
 class ConfigureFastDDS(Action):
     """
     Configure Fast DDS middleware for ROS 2 nodes with support for different discovery protocols.
-    
+
     This class sets up the Fast DDS configuration profile and optionally starts a Discovery Server
-    process based on the provided parameters. It creates configuration XML files using Xacro 
+    process based on the provided parameters. It creates configuration XML files using Xacro
     templates and sets the appropriate environment variables to use these configurations.
-    
+
     The class supports three discovery protocols:
     - SIMPLE: Direct peer-to-peer discovery (standard DDS discovery)
     - CLIENT: Discovery Server client mode (clients connect to a discovery server)
@@ -39,7 +39,7 @@ class ConfigureFastDDS(Action):
     ):
         """
         Initialize the ConfigureFastdds action.
-        
+
         Args:
             with_discovery_server (bool): Whether to start a discovery server process
             discovery_server_address (str): Address for the discovery server to listen on
@@ -131,23 +131,21 @@ class ConfigureFastDDS(Action):
                 get_fastdds_default_profile_env_var(), LaunchConfiguration("fastdds_profile")
             ),
         ]
-        
+
         if with_discovery_server:
-            self.actions.append(
-                discovery_server
-            )
+            self.actions.append(discovery_server)
 
     def execute(self, context: LaunchContext) -> None:
         """
         Execute all configured actions in sequence.
-        
+
         This method is called by the launch system when the action is executed.
         It iterates through all the actions created during initialization and
         executes them in order.
-        
+
         Args:
             context (LaunchContext): The launch context
-            
+
         Returns:
             None
         """

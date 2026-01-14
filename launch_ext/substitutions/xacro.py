@@ -10,7 +10,7 @@ import xacro
 class Xacro(Substitution):
     """
     Substitution that processes a xacro file and returns the result as a string
-    
+
     :param file_path: The path to the xacro file to process
     :param mappings: A dictionary of mappings to pass to xacro
 
@@ -39,22 +39,31 @@ class Xacro(Substitution):
     )
     """
 
-    def __init__(self, file_path: SomeSubstitutionsType, mappings: Dict[str, SomeSubstitutionsType] = {}, verbose: bool = False):
+    def __init__(
+        self,
+        file_path: SomeSubstitutionsType,
+        mappings: Dict[str, SomeSubstitutionsType] = {},
+        verbose: bool = False,
+    ):
         """Create a TemplateSubstitution."""
         super().__init__()
         self.__file_path = normalize_to_list_of_substitutions(file_path)
-        self.__mappings = {key: normalize_to_list_of_substitutions(value) for key, value in mappings.items()}
+        self.__mappings = {
+            key: normalize_to_list_of_substitutions(value) for key, value in mappings.items()
+        }
         self.__verbose = verbose
-    
-    def describe(self) -> Text:
+
+    def describe(self) -> str:
         """Return a description of this substitution as a string."""
         return f"Xacro: {self.__file_path}"
 
-    def perform(self, context: LaunchContext) -> Text:
+    def perform(self, context: LaunchContext) -> str:
         """Perform the substitution by returning the string with values substituted."""
 
         file_path = perform_substitutions(context, self.__file_path)
-        mappings = {key: perform_substitutions(context, value) for key, value in self.__mappings.items()}
+        mappings = {
+            key: perform_substitutions(context, value) for key, value in self.__mappings.items()
+        }
 
         if self.__verbose:
             print(f"xacro file_path: {file_path}")

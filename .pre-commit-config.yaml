@@ -1,0 +1,107 @@
+# To use:
+#
+#     pre-commit run -a
+#
+# Or:
+#
+#     pre-commit install  # (runs every time you commit in git)
+#
+# To update this file:
+#
+#     pre-commit autoupdate
+#
+# See https://github.com/pre-commit/pre-commit
+
+repos:
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-xml
+      - id: check-yaml
+      - id: debug-statements
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+      - id: fix-byte-order-marker
+
+  # Python hooks
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.32.1
+    hooks:
+    -   id: pyupgrade
+        args: [--py38-plus, --keep-runtime-typing]
+
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        args: ["--line-length=99"]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.0
+    hooks:
+    - id: flake8
+      args: ["--ignore=E203, E266, E501, W503, F403, F401 --max-line-length = 99"]
+
+  # CPP hooks
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format
+        description: Format files with ClangFormat.
+        entry: clang-format
+        language: system
+        files: \.(c|cc|cxx|cpp|frag|glsl|h|hpp|hxx|ih|ispc|ipp|java|js|m|proto|vert)$
+        args: ['-fallback-style=none', '-i']
+
+  # - repo: local
+  #   hooks:
+  #     - id: ament_cppcheck
+  #       name: ament_cppcheck
+  #       description: Static code analysis of C/C++ files.
+  #       stages: [commit]
+  #       entry: ament_cppcheck
+  #       language: system
+  #       files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+
+  # Maybe use https://github.com/cpplint/cpplint instead
+  # - repo: local
+  #   hooks:
+  #     - id: ament_cpplint
+  #       name: ament_cpplint
+  #       description: Static code analysis of C/C++ files.
+  #       stages: [commit]
+  #       entry: ament_cpplint
+  #       language: system
+  #       files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+  #       args: ["--linelength=100", "--filter=-whitespace/newline,-build/header_guard,-build/include_order,-build/namespaces,-legal/copyright"]
+
+  # Cmake hooks
+  # - repo: local
+  #   hooks:
+  #     - id: ament_lint_cmake
+  #       name: ament_lint_cmake
+  #       description: Check format of CMakeLists.txt files.
+  #       stages: [commit]
+  #       entry: ament_lint_cmake
+  #       language: system
+  #       files: CMakeLists\.txt$
+
+  # Spellcheck in comments and docs
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.1.0
+    hooks:
+      - id: codespell
+        name: codespell
+        description: Checks for common misspellings in text files.
+        entry: codespell
+        language: python
+        types: [text]
+        args: ['--ignore-words=.codespell-ignore-words.txt', '--write-changes']
+        exclude: \.(svg|pyc)$

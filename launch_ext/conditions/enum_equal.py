@@ -26,7 +26,7 @@ def str_to_enum(enum_type: Enum, string: str) -> Optional[Enum]:
     for k, v in enum_type.__members__.items():
         if k.lower() == string.lower():
             return v
-        
+
     return None
 
 
@@ -67,10 +67,12 @@ class EnumEqual(Condition):
         Returns:
             True if the substitution result matches the enum value, False otherwise
         """
-        enum_sub = str_to_enum(self._check_enum_value.__class__, self.__substitute.perform(context))
+        enum_sub = str_to_enum(
+            self._check_enum_value.__class__, self.__substitute.perform(context)
+        )
         return enum_sub == self._check_enum_value
 
-    def describe(self) -> Text:
+    def describe(self) -> str:
         """Return a description of this condition.
 
         Returns:

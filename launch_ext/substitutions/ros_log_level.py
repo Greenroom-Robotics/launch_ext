@@ -9,11 +9,12 @@ from launch.utilities import normalize_to_list_of_substitutions
 from launch.utilities import perform_substitutions
 from launch.substitutions.substitution_failure import SubstitutionFailure
 
+
 def ROSLoggers(node_level: SomeSubstitutionsType = None, *args):
     out = []
     for a in args:
-        if type(a) == dict:
-            for k,v in a.items():
+        if isinstance(a, dict):
+            for k, v in a.items():
                 out.append("--log-level")
                 out.append(ROSLogLevel(v, name=k))
 
@@ -22,10 +23,16 @@ def ROSLoggers(node_level: SomeSubstitutionsType = None, *args):
         out.append(ROSLogLevel(node_level))
     return out
 
+
 class ROSLogLevel(Substitution):
     """Substitution that contains the file contents of a file path."""
 
-    def __init__(self, level: SomeSubstitutionsType, name: SomeSubstitutionsType = None, all_loggers:bool = False) -> None:
+    def __init__(
+        self,
+        level: SomeSubstitutionsType,
+        name: SomeSubstitutionsType = None,
+        all_loggers: bool = False,
+    ) -> None:
         """Create an ROSLogLevel substitution."""
         super().__init__()
 
@@ -42,11 +49,11 @@ class ROSLogLevel(Substitution):
         """Getter for path."""
         return self.__node_level
 
-    def describe(self) -> Text:
+    def describe(self) -> str:
         """Return a description of this substitution as a string."""
-        return 'ROSLogLevel(level={})'.format(self.__node_level.describe())
+        return f"ROSLogLevel(level={self.__node_level.describe()})"
 
-    def perform(self, context: LaunchContext) -> Text:
+    def perform(self, context: LaunchContext) -> str:
         """Perform the substitution by obtaining the Node name from the context"""
         level = perform_substitutions(context, self.__node_level)
 
@@ -54,10 +61,10 @@ class ROSLogLevel(Substitution):
             if self.__node_name is not None:
                 node_name = perform_substitutions(context, self.__node_name)
             else:
-                node_name = context.get_locals_as_dict()['ros_specific_arguments']['name']
+                node_name = context.get_locals_as_dict()["ros_specific_arguments"]["name"]
                 _, node_name = node_name.split(":=")
         except KeyError:
-            raise SubstitutionFailure(f"Invalid context for ROSLogLevel substitution.")
+            raise SubstitutionFailure("Invalid context for ROSLogLevel substitution.")
 
         if self.__all_loggers:
             return level

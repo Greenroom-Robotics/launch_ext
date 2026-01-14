@@ -19,7 +19,8 @@ from launch.utilities import normalize_to_list_of_substitutions, perform_substit
 USB_PORT_RE = re.compile(r"(\d+)\-(\d+)(\.\d+)*")
 USB_CONFIG_RE = re.compile(r"(\d+)\-(\d+)(\.\d+)*:(\d+)\.(\d+)")
 
-def re_glob_path(path: Path, pattern: re.Pattern, directory: Optional[bool]=None) -> List[Path]:
+
+def re_glob_path(path: Path, pattern: re.Pattern, directory: Optional[bool] = None) -> List[Path]:
     """Glob a path using a regular expression pattern.
 
     Args:
@@ -38,7 +39,7 @@ def re_glob_path(path: Path, pattern: re.Pattern, directory: Optional[bool]=None
         if directory is not None:
             if p.is_dir() != directory:
                 continue
-        
+
         results.append(p)
     return results
 
@@ -66,7 +67,9 @@ class MakeDeviceNodeFromPath(Action):
     device information from a sysfs device path.
     """
 
-    def __init__(self, target_node: SomeSubstitutionsType, device_path: SomeSubstitutionsType, **kwargs):
+    def __init__(
+        self, target_node: SomeSubstitutionsType, device_path: SomeSubstitutionsType, **kwargs
+    ):
         """Initialize the MakeDeviceNodeFromPath action.
 
         Args:
@@ -86,15 +89,21 @@ class MakeDeviceNodeFromPath(Action):
         device_path = perform_substitutions(context, self.__device_path)
 
         if Path(target_node).exists():
-            launch.logging.get_logger('launch.user').info(f"Device node {target_node} already exists")
+            launch.logging.get_logger("launch.user").info(
+                f"Device node {target_node} already exists"
+            )
             return None
 
         device_sysfs_path = Path(device_path)
         if not device_sysfs_path.exists():
-            launch.logging.get_logger('launch.user').error(f"Could not find device path '{device_path}'")
+            launch.logging.get_logger("launch.user").error(
+                f"Could not find device path '{device_path}'"
+            )
             return None
 
-        launch.logging.get_logger('launch.user').info(f"Creating device node {target_node} from {device_path}")
+        launch.logging.get_logger("launch.user").info(
+            f"Creating device node {target_node} from {device_path}"
+        )
 
         major, minor = (device_sysfs_path / "dev").read_text().strip().split(":")
         create_device_node(target_node, major, minor)
@@ -133,16 +142,23 @@ class MakeUSBDeviceNodesFromPortPath(Action):
 
         device_sysfs_path = Path(port_path)
         if not device_sysfs_path.exists():
-            launch.logging.get_logger('launch.user').error(f"Could not find device path '{port_path}'")
+            launch.logging.get_logger("launch.user").error(
+                f"Could not find device path '{port_path}'"
+            )
             return None
 
-        launch.logging.get_logger('launch.user').info(f"Processing USB devices from port path {port_path}")
+        launch.logging.get_logger("launch.user").info(
+            f"Processing USB devices from port path {port_path}"
+        )
 
         # This class appears to be incomplete - it doesn't define target_node
         # This should be fixed by adding a target_node parameter to __init__
-        launch.logging.get_logger('launch.user').warn("MakeUSBDeviceNodesFromPortPath is incomplete - missing target_node parameter")
+        launch.logging.get_logger("launch.user").warn(
+            "MakeUSBDeviceNodesFromPortPath is incomplete - missing target_node parameter"
+        )
 
         return None
+
 
 class MakeDeviceNode(Action):
     """Create device nodes for USB devices by manufacturer and product.
@@ -151,8 +167,15 @@ class MakeDeviceNode(Action):
     names, then creates a device node at the specified target path.
     """
 
-    def __init__(self, target_node: SomeSubstitutionsType, device_type: SomeSubstitutionsType,
-                 manufacturer: SomeSubstitutionsType, product: SomeSubstitutionsType, use_id: bool=False, **kwargs):
+    def __init__(
+        self,
+        target_node: SomeSubstitutionsType,
+        device_type: SomeSubstitutionsType,
+        manufacturer: SomeSubstitutionsType,
+        product: SomeSubstitutionsType,
+        use_id: bool = False,
+        **kwargs,
+    ):
         """Initialize the MakeDeviceNode action.
 
         Args:
@@ -171,7 +194,9 @@ class MakeDeviceNode(Action):
         self.__product = normalize_to_list_of_substitutions(product)
         self.__use_id = use_id
 
-    def find_usb_port(self, manufacturer: Optional[str]=None, product: Optional[str]=None) -> Optional[Path]:
+    def find_usb_port(
+        self, manufacturer: Optional[str] = None, product: Optional[str] = None
+    ) -> Optional[Path]:
         """Find USB port path by manufacturer and product.
 
         Args:
@@ -183,11 +208,11 @@ class MakeDeviceNode(Action):
         """
         for usb_dev in re_glob_path(Path("/sys/bus/usb/devices"), USB_PORT_RE, directory=True):
             if not self.__use_id:
-                manufacturer_f = (usb_dev / "manufacturer")
-                product_f = (usb_dev / "product")
+                manufacturer_f = usb_dev / "manufacturer"
+                product_f = usb_dev / "product"
             else:
-                manufacturer_f = (usb_dev / "idVendor")
-                product_f = (usb_dev / "idProduct")
+                manufacturer_f = usb_dev / "idVendor"
+                product_f = usb_dev / "idProduct"
 
             if not manufacturer_f.exists():
                 continue
@@ -238,20 +263,28 @@ class MakeDeviceNode(Action):
         product = perform_substitutions(context, self.__product)
 
         if Path(target_node).exists():
-            launch.logging.get_logger('launch.user').info(f"Device node {target_node} already exists")
+            launch.logging.get_logger("launch.user").info(
+                f"Device node {target_node} already exists"
+            )
             return None
 
         usb_dev = self.find_usb_port(manufacturer, product)
         if usb_dev is None:
-            launch.logging.get_logger('launch.user').error(f"Could not find USB device {manufacturer} {product}")
-            return None
-        
-        usb_interface = self.find_usb_interface(usb_dev, device_type)
-        if usb_interface is None:
-            launch.logging.get_logger('launch.user').error(f"Could not find USB interface {device_type} for {manufacturer} {product}")
+            launch.logging.get_logger("launch.user").error(
+                f"Could not find USB device {manufacturer} {product}"
+            )
             return None
 
-        launch.logging.get_logger('launch.user').info(f"Creating device node {target_node} for {manufacturer} {product}")
+        usb_interface = self.find_usb_interface(usb_dev, device_type)
+        if usb_interface is None:
+            launch.logging.get_logger("launch.user").error(
+                f"Could not find USB interface {device_type} for {manufacturer} {product}"
+            )
+            return None
+
+        launch.logging.get_logger("launch.user").info(
+            f"Creating device node {target_node} for {manufacturer} {product}"
+        )
 
         major, minor = (usb_interface / "dev").read_text().strip().split(":")
 

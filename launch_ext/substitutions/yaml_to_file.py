@@ -42,7 +42,7 @@ class YAMLToFile(WriteTempFile):
         """
         return self._WriteTempFile__contents
 
-    def describe(self) -> Text:
+    def describe(self) -> str:
         """Return a description of this substitution.
 
         Note: Does not accurately represent the YAML contents due to Substitution limitations.
@@ -50,8 +50,8 @@ class YAMLToFile(WriteTempFile):
         Returns:
             String description of the substitution for debugging
         """
-        contents_str = ' + '.join([sub.describe() for sub in super().contents])
-        return 'YAMLToFile(contents={})'.format(contents_str)
+        contents_str = " + ".join([sub.describe() for sub in super().contents])
+        return f"YAMLToFile(contents={contents_str})"
 
     def write(self, handle: BinaryIO, context: LaunchContext) -> None:
         """Write the data as YAML to the file handle.
@@ -82,4 +82,4 @@ class YAMLToFile(WriteTempFile):
 
         dumper.add_multi_representer(Substitution, substitution_representer)
 
-        yaml.dump(self.contents, handle, Dumper=dumper, encoding='utf8')
+        yaml.dump(self.contents, handle, Dumper=dumper, encoding="utf8")

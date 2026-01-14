@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 from launch import LaunchContext
@@ -9,7 +8,7 @@ from launch.actions import SetLaunchConfiguration
 
 def test_file_contents():
     lc = LaunchContext()
-    SetLaunchConfiguration('test_sub', "world").visit(lc)
+    SetLaunchConfiguration("test_sub", "world").visit(lc)
 
-    sub = WriteTempFile('asdf')
-    assert Path(sub.perform(lc)).read_text() == 'asdf'
+    sub = WriteTempFile("asdf")
+    assert Path(sub.perform(lc)).read_text() == "asdf"

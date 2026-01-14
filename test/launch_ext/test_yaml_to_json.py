@@ -28,12 +28,13 @@ config:
 
     # Remove the wrapping quotes and parse as JSON to verify structure
     import json
+
     json_content = json.loads(result[1:-1])  # Remove quotes
 
-    assert json_content['name'] == 'test'
-    assert json_content['values'] == ['item1', 'item2']
-    assert json_content['config']['enabled'] is True
-    assert json_content['config']['count'] == 42
+    assert json_content["name"] == "test"
+    assert json_content["values"] == ["item1", "item2"]
+    assert json_content["config"]["enabled"] is True
+    assert json_content["config"]["count"] == 42
 
 
 def test_yaml_to_json_unquoted():
@@ -61,12 +62,13 @@ config:
 
     # Parse as JSON to verify structure
     import json
+
     json_content = json.loads(result)
 
-    assert json_content['name'] == 'test'
-    assert json_content['values'] == ['item1', 'item2']
-    assert json_content['config']['enabled'] is True
-    assert json_content['config']['count'] == 42
+    assert json_content["name"] == "test"
+    assert json_content["values"] == ["item1", "item2"]
+    assert json_content["config"]["enabled"] is True
+    assert json_content["config"]["count"] == 42
 
 
 def test_yaml_to_json_default_quoted():

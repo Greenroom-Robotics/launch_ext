@@ -51,17 +51,17 @@ class ConfigureZenoh(Action):
     ) -> None:
         """
         Read a JSON config file, apply overrides, and write the result to a new location.
-        
+
         This helper method reads a JSON configuration file from the package share directory,
         applies any overrides provided as a dictionary, and writes the resulting configuration
         to a new file in the /home/ros directory.
-        
+
         Args:
             context (LaunchContext): The launch context
             file_name (str): Name of the configuration file to read and write
             overrides (dict, optional): Dictionary of settings to override in the config file.
                 Defaults to {}.
-                
+
         Returns:
             None
         """
@@ -92,7 +92,7 @@ class ConfigureZenoh(Action):
         generate_session_config_file: bool = False,
         zenoh_router_config_path: str = "/home/ros/zenoh_router_config.json",
         zenoh_session_config_path: str = "/home/ros/zenoh_session_config.json",
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize the ConfigureZenoh action.
@@ -130,28 +130,34 @@ class ConfigureZenoh(Action):
         if generate_router_config_file:
             write_zenoh_router_config = OpaqueFunction(
                 function=self.write_config_file,
-                kwargs={"file_name": "zenoh_router_config.json", "overrides": router_config, "destination": zenoh_router_config_path },
+                kwargs={
+                    "file_name": "zenoh_router_config.json",
+                    "overrides": router_config,
+                    "destination": zenoh_router_config_path,
+                },
             )
             self.actions.append(write_zenoh_router_config)
 
             # Set environment variable to use the generated router config
             set_router_config_uri = SetEnvironmentVariable(
-                name="ZENOH_ROUTER_CONFIG_URI",
-                value=zenoh_router_config_path
+                name="ZENOH_ROUTER_CONFIG_URI", value=zenoh_router_config_path
             )
             self.actions.append(set_router_config_uri)
 
         if generate_session_config_file:
             write_zenoh_session_config = OpaqueFunction(
                 function=self.write_config_file,
-                kwargs={"file_name": "zenoh_session_config.json", "overrides": session_config, "destination": zenoh_session_config_path },
+                kwargs={
+                    "file_name": "zenoh_session_config.json",
+                    "overrides": session_config,
+                    "destination": zenoh_session_config_path,
+                },
             )
             self.actions.append(write_zenoh_session_config)
 
             # Set environment variable to use the generated session config
             set_session_config_uri = SetEnvironmentVariable(
-                name="ZENOH_SESSION_CONFIG_URI",
-                value=zenoh_session_config_path
+                name="ZENOH_SESSION_CONFIG_URI", value=zenoh_session_config_path
             )
             self.actions.append(set_session_config_uri)
 
@@ -168,14 +174,14 @@ class ConfigureZenoh(Action):
     def execute(self, context: LaunchContext) -> None:
         """
         Execute all configured actions in sequence.
-        
+
         This method is called by the launch system when the action is executed.
         It iterates through all the actions created during initialization and
         executes them in order.
-        
+
         Args:
             context (LaunchContext): The launch context
-            
+
         Returns:
             None
         """

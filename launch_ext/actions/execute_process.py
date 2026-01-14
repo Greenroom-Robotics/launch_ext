@@ -33,7 +33,7 @@ from launch.substitution import Substitution
 from launch.substitutions import TextSubstitution
 
 
-@expose_action('executable_wait_on_children')
+@expose_action("executable_wait_on_children")
 class ExecuteProcessExt(ExecuteLocalExt):
     """
     Action that begins executing a process and sets up event handlers for it.
@@ -124,15 +124,15 @@ class ExecuteProcessExt(ExecuteLocalExt):
     """
 
     def __init__(
-            self,
-            *,
-            cmd: Iterable[SomeSubstitutionsType],
-            prefix: Optional[SomeSubstitutionsType] = None,
-            name: Optional[SomeSubstitutionsType] = None,
-            cwd: Optional[SomeSubstitutionsType] = None,
-            env: Optional[Dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
-            additional_env: Optional[Dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
-            **kwargs
+        self,
+        *,
+        cmd: Iterable[SomeSubstitutionsType],
+        prefix: Optional[SomeSubstitutionsType] = None,
+        name: Optional[SomeSubstitutionsType] = None,
+        cwd: Optional[SomeSubstitutionsType] = None,
+        env: Optional[Dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
+        additional_env: Optional[Dict[SomeSubstitutionsType, SomeSubstitutionsType]] = None,
+        **kwargs
     ) -> None:
         """
         Construct an ExecuteProcessExt action.
@@ -233,16 +233,13 @@ class ExecuteProcessExt(ExecuteLocalExt):
             Defaults to 'False'.
         :param: respawn_delay a delay time to relaunch the died process if respawn is 'True'.
         """
-        executable = Executable(cmd=cmd, prefix=prefix, name=name, cwd=cwd, env=env,
-                                additional_env=additional_env)
+        executable = Executable(
+            cmd=cmd, prefix=prefix, name=name, cwd=cwd, env=env, additional_env=additional_env
+        )
         super().__init__(process_description=executable, **kwargs)
 
     @classmethod
-    def _parse_cmdline(
-        cls,
-        cmd: Text,
-        parser: Parser
-    ) -> List[SomeSubstitutionsType]:
+    def _parse_cmdline(cls, cmd: str, parser: Parser) -> List[SomeSubstitutionsType]:
         """
         Parse text apt for command line execution.
 
@@ -258,6 +255,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
             nonlocal arg
             result_args.append(arg)
             arg = []
+
         for sub in parser.parse_substitution(cmd):
             if isinstance(sub, TextSubstitution):
                 tokens = shlex.split(sub.text)
@@ -299,12 +297,7 @@ class ExecuteProcessExt(ExecuteLocalExt):
         return result_args
 
     @classmethod
-    def parse(
-        cls,
-        entity: Entity,
-        parser: Parser,
-        ignore: Optional[List[str]] = None
-    ):
+    def parse(cls, entity: Entity, parser: Parser, ignore: Optional[List[str]] = None):
         """
         Return the `ExecuteProcessExt` action and kwargs for constructing it.
 
@@ -316,93 +309,96 @@ class ExecuteProcessExt(ExecuteLocalExt):
         if ignore is None:
             ignore = []
 
-        if 'cmd' not in ignore:
-            kwargs['cmd'] = cls._parse_cmdline(entity.get_attr('cmd'), parser)
+        if "cmd" not in ignore:
+            kwargs["cmd"] = cls._parse_cmdline(entity.get_attr("cmd"), parser)
 
-        if 'cwd' not in ignore:
-            cwd = entity.get_attr('cwd', optional=True)
+        if "cwd" not in ignore:
+            cwd = entity.get_attr("cwd", optional=True)
             if cwd is not None:
-                kwargs['cwd'] = parser.parse_substitution(cwd)
+                kwargs["cwd"] = parser.parse_substitution(cwd)
 
-        if 'name' not in ignore:
-            name = entity.get_attr('name', optional=True)
+        if "name" not in ignore:
+            name = entity.get_attr("name", optional=True)
             if name is not None:
-                kwargs['name'] = parser.parse_substitution(name)
+                kwargs["name"] = parser.parse_substitution(name)
 
-        if 'on_exit' not in ignore:
-            on_exit = entity.get_attr('on_exit', optional=True)
+        if "on_exit" not in ignore:
+            on_exit = entity.get_attr("on_exit", optional=True)
             if on_exit is not None:
-                if on_exit == 'shutdown':
-                    kwargs['on_exit'] = [Shutdown()]
+                if on_exit == "shutdown":
+                    kwargs["on_exit"] = [Shutdown()]
                 else:
                     raise ValueError(
-                        'Attribute on_exit of Entity node expected to be shutdown but got `{}`'
-                        'Other on_exit actions not yet supported'.format(on_exit))
+                        "Attribute on_exit of Entity node expected to be shutdown but got `{}`"
+                        "Other on_exit actions not yet supported".format(on_exit)
+                    )
 
-        if 'prefix' not in ignore:
-            prefix = entity.get_attr('launch-prefix', optional=True)
+        if "prefix" not in ignore:
+            prefix = entity.get_attr("launch-prefix", optional=True)
             if prefix is not None:
-                kwargs['prefix'] = parser.parse_substitution(prefix)
+                kwargs["prefix"] = parser.parse_substitution(prefix)
 
-        if 'output' not in ignore:
-            output = entity.get_attr('output', optional=True)
+        if "output" not in ignore:
+            output = entity.get_attr("output", optional=True)
             if output is not None:
-                kwargs['output'] = parser.parse_substitution(output)
+                kwargs["output"] = parser.parse_substitution(output)
 
-        if 'respawn' not in ignore:
-            respawn = entity.get_attr('respawn', optional=True)
+        if "respawn" not in ignore:
+            respawn = entity.get_attr("respawn", optional=True)
             if respawn is not None:
-                kwargs['respawn'] = parser.parse_substitution(respawn)
+                kwargs["respawn"] = parser.parse_substitution(respawn)
 
-        if 'respawn_delay' not in ignore:
-            respawn_delay = entity.get_attr('respawn_delay', data_type=float, optional=True)
+        if "respawn_delay" not in ignore:
+            respawn_delay = entity.get_attr("respawn_delay", data_type=float, optional=True)
             if respawn_delay is not None:
                 if respawn_delay < 0.0:
                     raise ValueError(
-                        'Attribute respawn_delay of Entity node expected to be '
-                        'a non-negative value but got `{}`'.format(respawn_delay)
+                        "Attribute respawn_delay of Entity node expected to be "
+                        "a non-negative value but got `{}`".format(respawn_delay)
                     )
-                kwargs['respawn_delay'] = respawn_delay
+                kwargs["respawn_delay"] = respawn_delay
 
-        if 'sigkill_timeout' not in ignore:
-            sigkill_timeout = entity.get_attr('sigkill_timeout', data_type=float, optional=True)
+        if "sigkill_timeout" not in ignore:
+            sigkill_timeout = entity.get_attr("sigkill_timeout", data_type=float, optional=True)
             if sigkill_timeout is not None:
                 if sigkill_timeout < 0.0:
                     raise ValueError(
-                        'Attribute sigkill_timeout of Entity node expected to be '
-                        'a non-negative value but got `{}`'.format(sigkill_timeout)
+                        "Attribute sigkill_timeout of Entity node expected to be "
+                        "a non-negative value but got `{}`".format(sigkill_timeout)
                     )
-                kwargs['sigkill_timeout'] = str(sigkill_timeout)
+                kwargs["sigkill_timeout"] = str(sigkill_timeout)
 
-        if 'sigterm_timeout' not in ignore:
-            sigterm_timeout = entity.get_attr('sigterm_timeout', data_type=float, optional=True)
+        if "sigterm_timeout" not in ignore:
+            sigterm_timeout = entity.get_attr("sigterm_timeout", data_type=float, optional=True)
             if sigterm_timeout is not None:
                 if sigterm_timeout < 0.0:
                     raise ValueError(
-                        'Attribute sigterm_timeout of Entity node expected to be '
-                        'a non-negative value but got `{}`'.format(sigterm_timeout)
+                        "Attribute sigterm_timeout of Entity node expected to be "
+                        "a non-negative value but got `{}`".format(sigterm_timeout)
                     )
-                kwargs['sigterm_timeout'] = str(sigterm_timeout)
+                kwargs["sigterm_timeout"] = str(sigterm_timeout)
 
-        if 'shell' not in ignore:
-            shell = entity.get_attr('shell', data_type=bool, optional=True)
+        if "shell" not in ignore:
+            shell = entity.get_attr("shell", data_type=bool, optional=True)
             if shell is not None:
-                kwargs['shell'] = shell
+                kwargs["shell"] = shell
 
-        if 'emulate_tty' not in ignore:
-            emulate_tty = entity.get_attr('emulate_tty', data_type=bool, optional=True)
+        if "emulate_tty" not in ignore:
+            emulate_tty = entity.get_attr("emulate_tty", data_type=bool, optional=True)
             if emulate_tty is not None:
-                kwargs['emulate_tty'] = emulate_tty
+                kwargs["emulate_tty"] = emulate_tty
 
-        if 'additional_env' not in ignore:
+        if "additional_env" not in ignore:
             # Conditions won't be allowed in the `env` tag.
             # If that feature is needed, `set_enviroment_variable` and
             # `unset_enviroment_variable` actions should be used.
-            env = entity.get_attr('env', data_type=List[Entity], optional=True)
+            env = entity.get_attr("env", data_type=List[Entity], optional=True)
             if env is not None:
-                kwargs['additional_env'] = {
-                    tuple(parser.parse_substitution(e.get_attr('name'))):
-                    parser.parse_substitution(e.get_attr('value')) for e in env
+                kwargs["additional_env"] = {
+                    tuple(
+                        parser.parse_substitution(e.get_attr("name"))
+                    ): parser.parse_substitution(e.get_attr("value"))
+                    for e in env
                 }
                 for e in env:
                     e.assert_entity_completely_parsed()

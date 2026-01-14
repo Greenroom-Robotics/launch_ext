@@ -22,9 +22,9 @@ class YamlToJson(Substitution):
         self.file_content_substitution = file_content_substitution
         self.quote_output = quote_output
 
-    def describe(self) -> Text:
+    def describe(self) -> str:
         """Return a description of this substitution as a string."""
-        return f'YamlToJson(file_content={self.file_content_substitution.describe()}, quote_output={self.quote_output})'
+        return f"YamlToJson(file_content={self.file_content_substitution.describe()}, quote_output={self.quote_output})"
 
     def perform(self, context: LaunchContext) -> str:
         """Convert YAML content to JSON string."""

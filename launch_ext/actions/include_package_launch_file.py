@@ -5,8 +5,11 @@ from launch.actions import (
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
+
 def IncludePackageLaunchFile(package: str, launch_file: str, **kwargs):
     return IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(PathJoinSubstitution([FindPackageShare(package), "launch", launch_file])),
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([FindPackageShare(package), "launch", launch_file])
+        ),
         **kwargs,
     )
