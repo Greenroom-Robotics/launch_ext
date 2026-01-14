@@ -754,7 +754,7 @@ class ExecuteLocalExt(Action):
             )
         except Exception:
             self.__logger.error(
-                "exception occurred while executing process:\n{}".format(traceback.format_exc())
+                f"exception occurred while executing process:\n{traceback.format_exc()}"
             )
             self.__cleanup()
             return

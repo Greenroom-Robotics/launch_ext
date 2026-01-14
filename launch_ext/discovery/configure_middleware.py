@@ -11,11 +11,6 @@ def configure_middleware(config):
             SetLaunchConfiguration("fastdds_profile_super_client", ""),
             ConfigureZenoh(
                 with_router=config.discovery.with_discovery_server,
-                router_config={
-                    "connect": {"endpoints": [f"tcp/{config.discovery.discovery_server_ip}:7447"]},
-                    "listen": {"endpoints": ["tcp/0.0.0.0:7447"]},
-                },
-                session_config={},
             ),
         ]
     if config.discovery.type == "fastdds":
