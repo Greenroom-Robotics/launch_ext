@@ -4,11 +4,12 @@ from launch.substitutions import (
 )
 from launch_ros.substitutions import FindPackageShare
 from launch.action import Action
-from launch.actions import OpaqueFunction
+from launch.actions import OpaqueFunction, SetEnvironmentVariable
 from launch.launch_context import LaunchContext
 from launch_ros.actions import Node
 import json
 import launch.logging
+from typing import Optional
 
 
 def deep_merge(base: dict, override: dict) -> dict:
@@ -38,10 +39,11 @@ def deep_merge(base: dict, override: dict) -> dict:
 class ConfigureZenoh(Action):
     """
     Configure Zenoh middleware for ROS 2 nodes.
-    
-    This class sets up Zenoh middleware by creating configuration files for both
-    the Zenoh router and Zenoh session. It can also optionally start a Zenoh router
-    process based on the provided parameters.
+
+    This action configures Zenoh middleware using modern rmw_zenoh best practices.
+    By default, it relies on rmw_zenoh's built-in defaults. Use ZENOH_CONFIG_OVERRIDE
+    environment variable at the container level for runtime configuration.
+    Optionally generates custom configuration files and starts a Zenoh router process.
     """
 
     def write_config_file(
@@ -82,56 +84,85 @@ class ConfigureZenoh(Action):
         return None
 
     def __init__(
-        self, 
-        with_router: bool = False, 
-        router_config: dict = {}, 
-        session_config: dict = {}, 
-        zenoh_router_config_path="/home/ros/zenoh_router_config.json", 
-        zenoh_session_config_path="/home/ros/zenoh_session_config.json", 
+        self,
+        with_router: bool = False,
+        router_config: Optional[dict] = None,
+        session_config: Optional[dict] = None,
+        generate_router_config_file: bool = False,
+        generate_session_config_file: bool = False,
+        zenoh_router_config_path: str = "/home/ros/zenoh_router_config.json",
+        zenoh_session_config_path: str = "/home/ros/zenoh_session_config.json",
         **kwargs
     ):
         """
         Initialize the ConfigureZenoh action.
-        
+
         Args:
             with_router (bool): Whether to start a Zenoh router process
-            router_config (dict): Configuration overrides for the Zenoh router
-            session_config (dict): Configuration overrides for the Zenoh session
-            zenoh_router_config_path (str, optional): Path where to write the Zenoh router config.
-                Defaults to "/home/ros/zenoh_router_config.json"
-            zenoh_session_config_path (str, optional): Path where to write the Zenoh session config.
-                Defaults to "/home/ros/zenoh_session_config.json"
+            router_config (dict, optional): Configuration overrides for the Zenoh router
+                (only used if generate_router_config_file=True)
+            session_config (dict, optional): Configuration overrides for the Zenoh session
+                (only used if generate_session_config_file=True)
+            generate_router_config_file (bool): Whether to generate router config file
+                (default False, uses rmw_zenoh defaults)
+            generate_session_config_file (bool): Whether to generate session config file
+                (default False, uses rmw_zenoh defaults)
+            zenoh_router_config_path (str): Path where to write the Zenoh router config
+            zenoh_session_config_path (str): Path where to write the Zenoh session config
             **kwargs: Additional arguments passed to the parent Action class
+
+        Note:
+            For runtime configuration changes, set ZENOH_CONFIG_OVERRIDE environment
+            variable at the container/system level instead of using config files.
         """
         super().__init__(**kwargs)
 
-        # Define the Zenoh router node that will be conditionally launched
-        zenoh_router = Node(
-            name="zenoh_router",
-            package="rmw_zenoh_cpp",
-            executable="rmw_zenohd",
-            output="both",
-        )
-
-        # Create the actions to write router and session configuration files
-        write_zenoh_router_config = OpaqueFunction(
-            function=self.write_config_file,
-            kwargs={"file_name": "zenoh_router_config.json", "overrides": router_config, "destination": zenoh_router_config_path },
-        )
-
-        write_zenoh_session_config = OpaqueFunction(
-            function=self.write_config_file,
-            kwargs={"file_name": "zenoh_session_config.json", "overrides": session_config, "destination": zenoh_session_config_path },
-        )
+        # Handle mutable default arguments
+        if router_config is None:
+            router_config = {}
+        if session_config is None:
+            session_config = {}
 
         # Collect the actions to be executed
-        self.actions = [
-            write_zenoh_router_config,
-            write_zenoh_session_config,
-        ]
+        self.actions = []
+
+        # Conditionally create configuration file actions
+        if generate_router_config_file:
+            write_zenoh_router_config = OpaqueFunction(
+                function=self.write_config_file,
+                kwargs={"file_name": "zenoh_router_config.json", "overrides": router_config, "destination": zenoh_router_config_path },
+            )
+            self.actions.append(write_zenoh_router_config)
+
+            # Set environment variable to use the generated router config
+            set_router_config_uri = SetEnvironmentVariable(
+                name="ZENOH_ROUTER_CONFIG_URI",
+                value=zenoh_router_config_path
+            )
+            self.actions.append(set_router_config_uri)
+
+        if generate_session_config_file:
+            write_zenoh_session_config = OpaqueFunction(
+                function=self.write_config_file,
+                kwargs={"file_name": "zenoh_session_config.json", "overrides": session_config, "destination": zenoh_session_config_path },
+            )
+            self.actions.append(write_zenoh_session_config)
+
+            # Set environment variable to use the generated session config
+            set_session_config_uri = SetEnvironmentVariable(
+                name="ZENOH_SESSION_CONFIG_URI",
+                value=zenoh_session_config_path
+            )
+            self.actions.append(set_session_config_uri)
 
         # Conditionally add the router node to the actions
         if with_router:
+            zenoh_router = Node(
+                name="zenoh_router",
+                package="rmw_zenoh_cpp",
+                executable="rmw_zenohd",
+                output="both",
+            )
             self.actions.append(zenoh_router)
 
     def execute(self, context: LaunchContext) -> None:

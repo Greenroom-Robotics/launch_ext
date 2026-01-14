@@ -99,13 +99,15 @@
     },
     "drop_future_timestamp": false
   },
-  "queries_default_timeout": 10000,
+  "queries_default_timeout": 600000,
   "routing": {
     "router": {
-      "peers_failover_brokering": true
+      "peers_failover_brokering": true,
+      "linkstate": {}
     },
     "peer": {
-      "mode": "peer_to_peer"
+      "mode": "peer_to_peer",
+      "linkstate": {}
     },
     "interests": {
       "timeout": 10000
@@ -113,10 +115,10 @@
   },
   "transport": {
     "unicast": {
-      "open_timeout": 10000,
-      "accept_timeout": 10000,
-      "accept_pending": 100,
-      "max_sessions": 1000,
+      "open_timeout": 60000,
+      "accept_timeout": 60000,
+      "accept_pending": 10000,
+      "max_sessions": 10000,
       "max_links": 1,
       "lowlatency": false,
       "qos": {
@@ -139,8 +141,8 @@
     "link": {
       "tx": {
         "sequence_number_resolution": "32bit",
-        "lease": 10000,
-        "keep_alive": 4,
+        "lease": 60000,
+        "keep_alive": 2,
         "batch_size": 65535,
         "queue": {
           "size": {
@@ -159,7 +161,7 @@
               "max_wait_before_drop_fragments": 50000
             },
             "block": {
-              "wait_before_close": 5000000
+              "wait_before_close": 60000000
             }
           },
           "batching": {
@@ -187,7 +189,13 @@
       }
     },
     "shared_memory": {
-      "enabled": true
+      "enabled": false,
+      "mode": "lazy",
+      "transport_optimization": {
+        "enabled": true,
+        "pool_size": 50331648,
+        "message_size_threshold": 512
+      }
     },
     "auth": {
       "usrpwd": {
