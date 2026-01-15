@@ -35,7 +35,7 @@ class ConfigureFastDDS(Action):
         simple_discovery: bool = True,
         fastdds_profile_path="/home/ros/fastdds_profile.xml",
         fastdds_profile_super_client_path="/home/ros/fastdds_profile_super_client.xml",
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize the ConfigureFastdds action.
@@ -53,6 +53,12 @@ class ConfigureFastDDS(Action):
             **kwargs: Additional arguments passed to the parent Action class
         """
         super().__init__(**kwargs)
+        fastdds_profile_path = LaunchConfiguration(
+            "fastdds_profile_path", default=fastdds_profile_path
+        )
+        fastdds_profile_super_client_path = LaunchConfiguration(
+            "fastdds_profile_super_client_path", default=fastdds_profile_super_client_path
+        )
 
         # Define a discovery server process that will be conditionally launched
         discovery_server = ExecuteProcess(
