@@ -25,13 +25,6 @@ def configure_middleware(config):
         ]
 
     if config.discovery.type == "easy":
-        if os.getenv("ROS_DISTRO") == "jazzy":
-            raise RuntimeError(
-                "Fast DDS Easy Mode is not supported on ROS Jazzy, please use a supported discovery mode or ROS version.\n"
-                "HINT: To specify your distro when building or launching set the ROS_DISTRO environment variable "
-                "or use the --ros-distro argument when building lookout"
-            )
-
         return [
             ConfigureFastDDSEasyMode(
                 easy_mode_base_address=config.discovery.base_address,
