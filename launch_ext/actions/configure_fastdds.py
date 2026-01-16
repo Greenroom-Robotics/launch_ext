@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 from launch.actions import ExecuteProcess, SetLaunchConfiguration, SetEnvironmentVariable
 from launch.substitutions import (
@@ -33,8 +34,8 @@ class ConfigureFastDDS(Action):
         discovery_server_ip: str = "0.0.0.0",
         own_ip: str = "0.0.0.0",
         simple_discovery: bool = True,
-        fastdds_profile_path="/home/ros/fastdds_profile.xml",
-        fastdds_profile_super_client_path="/home/ros/fastdds_profile_super_client.xml",
+        fastdds_profile_path = None,
+        fastdds_profile_super_client_path = None,
         **kwargs,
     ):
         """
@@ -47,17 +48,17 @@ class ConfigureFastDDS(Action):
             own_ip (str): IP address of the local machine
             simple_discovery (bool): If True, use SIMPLE discovery protocol; otherwise use CLIENT/SUPER_CLIENT
             fastdds_profile_path (str, optional): Path where to write the main Fast DDS profile.
-                Defaults to "/home/ros/fastdds_profile.xml"
+                Defaults to "~/fastdds_profile.xml"
             fastdds_profile_super_client_path (str, optional): Path where to write the super client profile.
-                Defaults to "/home/ros/fastdds_profile_super_client.xml"
+                Defaults to "~/fastdds_profile_super_client.xml"
             **kwargs: Additional arguments passed to the parent Action class
         """
         super().__init__(**kwargs)
         fastdds_profile_path = LaunchConfiguration(
-            "fastdds_profile_path", default=fastdds_profile_path
+            "fastdds_profile_path", default=fastdds_profile_path or f"{pathlib.Path.home()}/fastdds_profile.xml"
         )
         fastdds_profile_super_client_path = LaunchConfiguration(
-            "fastdds_profile_super_client_path", default=fastdds_profile_super_client_path
+            "fastdds_profile_super_client_path", default=fastdds_profile_super_client_path or f"{pathlib.Path.home()}/fastdds_profile_super_client.xml"
         )
 
         # Define a discovery server process that will be conditionally launched
