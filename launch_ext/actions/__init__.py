@@ -15,6 +15,7 @@ from .git_repo_info import LogRepoInfo, VerifyRepoCommit, VerifyRepoClean, SaveR
 from .configure_fastdds import ConfigureFastDDS
 from .configure_fastdds_easy import ConfigureFastDDSEasyMode
 from .configure_zenoh import ConfigureZenoh
+from .configure_avahi import ConfigureAvahi, AvahiProductService
 
 from .execute_local import ExecuteLocalExt
 from .execute_process import ExecuteProcessExt
@@ -35,4 +36,6 @@ __all__ = [
     "ConfigureFastDDS",
     "ConfigureFastDDSEasyMode",
     "ConfigureZenoh",
+    "ConfigureAvahi",
+    "AvahiProductService",
 ]
