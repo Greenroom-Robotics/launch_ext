@@ -1,33 +1,55 @@
-import os
-
 from launch.actions import SetLaunchConfiguration
 
 from launch_ext.actions import ConfigureFastDDS, ConfigureZenoh, ConfigureFastDDSEasyMode
+from launch_ext.actions.configure_zenoh import deep_merge
+from launch_ext.discovery.discovery_config import Discovery
 
 
-def configure_middleware(config):
-    if config.discovery.type == "zenoh":
+def configure_middleware(discovery: Discovery, with_server=True):
+    if discovery.type == "zenoh":
+        zenoh = discovery.zenoh
+        router_peers = zenoh.router_peers
+        router_config = zenoh.router_config
+        session_config = zenoh.session_config
+
+        # Merge router_peers into router_config connect/endpoints
+        if router_peers:
+            peer_endpoints = [f"tcp/{peer}:7447" for peer in router_peers]
+            router_config = deep_merge(
+                router_config,
+                {"connect": {"endpoints": peer_endpoints}},
+            )
+
+        generate_router = bool(router_config)
+        generate_session = bool(session_config)
+
         return [
             SetLaunchConfiguration("fastdds_profile_super_client", ""),
             ConfigureZenoh(
-                with_router=config.discovery.with_discovery_server,
+                with_router=zenoh.with_router and with_server,
+                router_config=router_config,
+                session_config=session_config,
+                generate_router_config_file=generate_router and with_server,
+                generate_session_config_file=generate_session,
             ),
         ]
-    if config.discovery.type == "fastdds":
+
+    if discovery.type == "fastdds":
+        fastdds = discovery.fastdds
         return [
             ConfigureFastDDS(
                 discovery_server_address="0.0.0.0",
-                with_discovery_server=config.discovery.with_discovery_server,
-                discovery_server_ip=config.discovery.discovery_server_ip,
-                own_ip=config.discovery.own_ip,
+                with_discovery_server=fastdds.with_discovery_server and with_server,
+                discovery_server_ip=fastdds.discovery_server_ip,
+                own_ip=fastdds.own_ip,
                 simple_discovery=False,
             ),
         ]
 
-    if config.discovery.type == "easy":
+    if discovery.type == "easy":
         return [
             ConfigureFastDDSEasyMode(
-                easy_mode_base_address=config.discovery.base_address,
+                easy_mode_base_address=discovery.easy.base_address,
             ),
         ]
 

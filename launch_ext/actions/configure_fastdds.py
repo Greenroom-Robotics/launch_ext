@@ -34,8 +34,8 @@ class ConfigureFastDDS(Action):
         discovery_server_ip: str = "0.0.0.0",
         own_ip: str = "0.0.0.0",
         simple_discovery: bool = True,
-        fastdds_profile_path = None,
-        fastdds_profile_super_client_path = None,
+        fastdds_profile_path=None,
+        fastdds_profile_super_client_path=None,
         **kwargs,
     ):
         """
@@ -55,10 +55,13 @@ class ConfigureFastDDS(Action):
         """
         super().__init__(**kwargs)
         fastdds_profile_path = LaunchConfiguration(
-            "fastdds_profile_path", default=fastdds_profile_path or f"{pathlib.Path.home()}/fastdds_profile.xml"
+            "fastdds_profile_path",
+            default=fastdds_profile_path or f"{pathlib.Path.home()}/fastdds_profile.xml",
         )
         fastdds_profile_super_client_path = LaunchConfiguration(
-            "fastdds_profile_super_client_path", default=fastdds_profile_super_client_path or f"{pathlib.Path.home()}/fastdds_profile_super_client.xml"
+            "fastdds_profile_super_client_path",
+            default=fastdds_profile_super_client_path
+            or f"{pathlib.Path.home()}/fastdds_profile_super_client.xml",
         )
 
         # Define a discovery server process that will be conditionally launched

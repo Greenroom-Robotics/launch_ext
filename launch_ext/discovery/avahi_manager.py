@@ -75,7 +75,7 @@ class AvahiPublishFlags(IntEnum):
 class AvahiEntryGroupState(IntEnum):
     """Avahi entry group states."""
 
-    UNCOMMITED = 0
+    UNCOMMITTED = 0
     REGISTERING = 1
     ESTABLISHED = 2
     COLLISION = 3
