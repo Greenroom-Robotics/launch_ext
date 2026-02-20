@@ -20,17 +20,14 @@ def configure_middleware(discovery: Discovery, with_server=True):
                 {"connect": {"endpoints": peer_endpoints}},
             )
 
-        generate_router = bool(router_config)
-        generate_session = bool(session_config)
-
         return [
             SetLaunchConfiguration("fastdds_profile_super_client", ""),
             ConfigureZenoh(
                 with_router=zenoh.with_router and with_server,
                 router_config=router_config,
                 session_config=session_config,
-                generate_router_config_file=generate_router and with_server,
-                generate_session_config_file=generate_session,
+                generate_router_config_file=True,
+                generate_session_config_file=True,
             ),
         ]
 
