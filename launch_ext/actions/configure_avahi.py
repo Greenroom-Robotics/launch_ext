@@ -68,9 +68,7 @@ class ConfigureAvahi(Action):
         # Create the opaque function action for registration
         self._register_action = OpaqueFunction(function=self._register_services)
 
-    def _register_services(
-        self, context: LaunchContext, *_args, **_kwargs
-    ) -> list[Action]:
+    def _register_services(self, context: LaunchContext, *_args, **_kwargs) -> list[Action]:
         """
         Register the configured Avahi services.
 

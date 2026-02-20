@@ -1,3 +1,4 @@
+from pathlib import Path
 from launch.substitutions import (
     PathJoinSubstitution,
     FileContent,
@@ -90,8 +91,8 @@ class ConfigureZenoh(Action):
         session_config: Optional[dict] = None,
         generate_router_config_file: bool = False,
         generate_session_config_file: bool = False,
-        zenoh_router_config_path: str = "/home/ros/zenoh_router_config.json",
-        zenoh_session_config_path: str = "/home/ros/zenoh_session_config.json",
+        zenoh_router_config_path: Optional[str] = None,
+        zenoh_session_config_path: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -122,6 +123,10 @@ class ConfigureZenoh(Action):
             router_config = {}
         if session_config is None:
             session_config = {}
+        if zenoh_router_config_path is None:
+            zenoh_router_config_path = str(Path.home() / "zenoh_router_config.json")
+        if zenoh_session_config_path is None:
+            zenoh_session_config_path = str(Path.home() / "zenoh_session_config.json")
 
         # Collect the actions to be executed
         self.actions = []
