@@ -144,14 +144,14 @@
         "batch_size": 65535,
         "queue": {
           "size": {
-            "control": 2,
-            "real_time": 2,
-            "interactive_high": 2,
-            "interactive_low": 2,
-            "data_high": 2,
-            "data": 2,
-            "data_low": 2,
-            "background": 2
+            "control": 8,
+            "real_time": 8,
+            "interactive_high": 8,
+            "interactive_low": 8,
+            "data_high": 8,
+            "data": 8,
+            "data_low": 8,
+            "background": 8
           },
           "congestion_control": {
             "drop": {
