@@ -1,6 +1,6 @@
 import pathlib
 
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, FileSystemLoader
 
 from launch.actions import (
     ExecuteProcess,
@@ -8,8 +8,10 @@ from launch.actions import (
     SetEnvironmentVariable,
 )
 from launch.substitutions import (
+    PathJoinSubstitution,
     LaunchConfiguration,
 )
+from launch_ros.substitutions import FindPackageShare
 from launch_ext.actions import WriteFile
 from launch_ext.substitutions import (
     ResolveHost,
@@ -18,12 +20,6 @@ from launch_ext.substitutions import (
 from launch.action import Action
 from launch.launch_context import LaunchContext
 from launch.substitution import Substitution
-
-_jinja_env = Environment(
-    loader=PackageLoader("launch_ext", "config"),
-    keep_trailing_newline=True,
-)
-_template = _jinja_env.get_template("fastdds_profile.xml.j2")
 
 
 class FastDDSProfileSubstitution(Substitution):
@@ -40,12 +36,21 @@ class FastDDSProfileSubstitution(Substitution):
         self.__allowed_interfaces = allowed_interfaces
 
     def perform(self, context):
+        config_dir = PathJoinSubstitution(
+            [FindPackageShare("launch_ext"), "config"]
+        ).perform(context)
+        env = Environment(
+            loader=FileSystemLoader(config_dir),
+            keep_trailing_newline=True,
+        )
+        template = env.get_template("fastdds_profile.xml.j2")
+
         interfaces = [
             ResolveHost(iface).perform(context) for iface in self.__allowed_interfaces
         ]
         discovery_server_ip = ResolveHost(self.__discovery_server_ip).perform(context)
         launch_log_dir = LaunchConfiguration("launch_log_dir").perform(context)
-        return _template.render(
+        return template.render(
             discovery_protocol=self.__discovery_protocol,
             discovery_server_ip=discovery_server_ip,
             launch_log_dir=launch_log_dir,
