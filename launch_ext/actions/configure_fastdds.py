@@ -1,14 +1,22 @@
 import os
 import pathlib
 
-from launch.actions import ExecuteProcess, SetLaunchConfiguration, SetEnvironmentVariable
+from launch.actions import (
+    ExecuteProcess,
+    SetLaunchConfiguration,
+    SetEnvironmentVariable,
+)
 from launch.substitutions import (
     PathJoinSubstitution,
     LaunchConfiguration,
 )
 from launch_ros.substitutions import FindPackageShare
 from launch_ext.actions import WriteFile
-from launch_ext.substitutions import Xacro, ResolveHost, get_fastdds_default_profile_env_var
+from launch_ext.substitutions import (
+    Xacro,
+    ResolveHost,
+    get_fastdds_default_profile_env_var,
+)
 from launch.action import Action
 from launch.launch_context import LaunchContext
 
@@ -56,7 +64,8 @@ class ConfigureFastDDS(Action):
         super().__init__(**kwargs)
         fastdds_profile_path = LaunchConfiguration(
             "fastdds_profile_path",
-            default=fastdds_profile_path or f"{pathlib.Path.home()}/fastdds_profile.xml",
+            default=fastdds_profile_path
+            or f"{pathlib.Path.home()}/fastdds_profile.xml",
         )
         fastdds_profile_super_client_path = LaunchConfiguration(
             "fastdds_profile_super_client_path",
@@ -64,22 +73,38 @@ class ConfigureFastDDS(Action):
             or f"{pathlib.Path.home()}/fastdds_profile_super_client.xml",
         )
 
-        # Define a discovery server process that will be conditionally launched
+        # Create the discovery server profile (SERVER mode with transport restrictions)
+        fastdds_server_profile_path = LaunchConfiguration(
+            "fastdds_server_profile_path",
+            default=f"{pathlib.Path.home()}/fastdds_profile_server.xml",
+        )
+        write_fastdds_server_profile = WriteFile(
+            Xacro(
+                file_path=PathJoinSubstitution(
+                    [
+                        FindPackageShare("launch_ext"),
+                        "config",
+                        "fastdds_profile.xml.xacro",
+                    ]
+                ),
+                mappings={
+                    "discovery_server_ip": ResolveHost(discovery_server_ip),
+                    "launch_log_dir": LaunchConfiguration("launch_log_dir"),
+                    "own_ip": ResolveHost(own_ip),
+                    "discovery_protocol": "SERVER",
+                    "ros_distro": os.environ.get("ROS_DISTRO", "jazzy"),
+                },
+            ),
+            LaunchConfiguration("fastdds_server_profile"),
+        )
+
         discovery_server = ExecuteProcess(
             name="discovery_server",
             cmd=[
                 "fastdds",
                 "discovery",
-                "--udp-address",
-                discovery_server_address,
-                "-p",
-                "11811",
-                "--tcp-address",
-                discovery_server_address,
-                "--tcp-port",
-                "42100",
-                "--server-id",
-                "0",
+                "-x",
+                LaunchConfiguration("fastdds_server_profile"),
             ],
             output={"stderr": ["screen", "log"], "both": ["own_log"]},
         )
@@ -119,7 +144,9 @@ class ConfigureFastDDS(Action):
                     "discovery_server_ip": ResolveHost(discovery_server_ip),
                     "launch_log_dir": LaunchConfiguration("launch_log_dir"),
                     "own_ip": ResolveHost(own_ip),
-                    "discovery_protocol": "SIMPLE" if simple_discovery else "SUPER_CLIENT",
+                    "discovery_protocol": "SIMPLE"
+                    if simple_discovery
+                    else "SUPER_CLIENT",
                     "ros_distro": os.environ.get("ROS_DISTRO", "jazzy"),
                 },
             ),
@@ -133,12 +160,17 @@ class ConfigureFastDDS(Action):
             SetLaunchConfiguration(
                 "fastdds_profile_super_client", fastdds_profile_super_client_path
             ),
+            SetLaunchConfiguration(
+                "fastdds_server_profile", fastdds_server_profile_path
+            ),
             # Write the configuration files from templates
             write_fastdds_profile,
             write_fastdds_profile_super_client,
+            write_fastdds_server_profile,
             # Configure environment to use the main profile
             SetEnvironmentVariable(
-                get_fastdds_default_profile_env_var(), LaunchConfiguration("fastdds_profile")
+                get_fastdds_default_profile_env_var(),
+                LaunchConfiguration("fastdds_profile"),
             ),
         ]
 
