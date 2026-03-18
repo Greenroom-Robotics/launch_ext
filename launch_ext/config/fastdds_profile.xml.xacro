@@ -28,6 +28,8 @@
                     <interfaces>
                         <allowlist>
                             <interface name="$(arg own_ip)" netmask_filter="OFF" />
+                            <!-- TODO: remove hardcoded tailscale interface after testing -->
+                            <interface name="100.64.0.170" netmask_filter="OFF" />
                         </allowlist>
                     </interfaces>
                 </xacro:if>
@@ -57,6 +59,13 @@
                             <locator>
                                 <udpv4>
                                     <address>$(arg own_ip)</address>
+                                    <port>11811</port>
+                                </udpv4>
+                            </locator>
+                            <!-- TODO: remove hardcoded tailscale locator after testing -->
+                            <locator>
+                                <udpv4>
+                                    <address>100.64.0.170</address>
                                     <port>11811</port>
                                 </udpv4>
                             </locator>
