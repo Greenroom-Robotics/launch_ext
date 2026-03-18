@@ -19,6 +19,21 @@ from launch_ext.substitutions import (
 )
 from launch.action import Action
 from launch.launch_context import LaunchContext
+from launch.substitution import Substitution
+
+
+class ResolveAndJoinInterfaces(Substitution):
+    """Resolve each interface host and join with spaces."""
+
+    def __init__(self, interfaces: list[str]):
+        self.__interfaces = interfaces
+
+    def perform(self, context):
+        resolved = [ResolveHost(iface).perform(context) for iface in self.__interfaces]
+        return " ".join(resolved)
+
+    def describe(self):
+        return f"ResolveAndJoinInterfaces({self.__interfaces})"
 
 
 class ConfigureFastDDS(Action):
@@ -40,7 +55,7 @@ class ConfigureFastDDS(Action):
         with_discovery_server: bool = False,
         discovery_server_address: str = "0.0.0.0",
         discovery_server_ip: str = "0.0.0.0",
-        own_ip: str = "0.0.0.0",
+        allowed_interfaces: list[str] | None = None,
         simple_discovery: bool = True,
         fastdds_profile_path=None,
         fastdds_profile_super_client_path=None,
@@ -53,7 +68,7 @@ class ConfigureFastDDS(Action):
             with_discovery_server (bool): Whether to start a discovery server process
             discovery_server_address (str): Address for the discovery server to listen on
             discovery_server_ip (str): IP address where the discovery server can be reached by clients
-            own_ip (str): IP address of the local machine
+            allowed_interfaces (list[str]): List of IP/host/interface addresses to allow. Empty means all.
             simple_discovery (bool): If True, use SIMPLE discovery protocol; otherwise use CLIENT/SUPER_CLIENT
             fastdds_profile_path (str, optional): Path where to write the main Fast DDS profile.
                 Defaults to "~/fastdds_profile.xml"
@@ -62,6 +77,9 @@ class ConfigureFastDDS(Action):
             **kwargs: Additional arguments passed to the parent Action class
         """
         super().__init__(**kwargs)
+        if allowed_interfaces is None:
+            allowed_interfaces = []
+        resolved_interfaces = ResolveAndJoinInterfaces(allowed_interfaces)
         fastdds_profile_path = LaunchConfiguration(
             "fastdds_profile_path",
             default=fastdds_profile_path
@@ -90,7 +108,7 @@ class ConfigureFastDDS(Action):
                 mappings={
                     "discovery_server_ip": ResolveHost(discovery_server_ip),
                     "launch_log_dir": LaunchConfiguration("launch_log_dir"),
-                    "own_ip": ResolveHost(own_ip),
+                    "allowed_interfaces": resolved_interfaces,
                     "discovery_protocol": "SERVER",
                     "ros_distro": os.environ.get("ROS_DISTRO", "jazzy"),
                 },
@@ -122,7 +140,7 @@ class ConfigureFastDDS(Action):
                 mappings={
                     "discovery_server_ip": ResolveHost(discovery_server_ip),
                     "launch_log_dir": LaunchConfiguration("launch_log_dir"),
-                    "own_ip": ResolveHost(own_ip),
+                    "allowed_interfaces": resolved_interfaces,
                     "discovery_protocol": "SIMPLE" if simple_discovery else "CLIENT",
                     "ros_distro": os.environ.get("ROS_DISTRO", "jazzy"),
                 },
@@ -143,7 +161,7 @@ class ConfigureFastDDS(Action):
                 mappings={
                     "discovery_server_ip": ResolveHost(discovery_server_ip),
                     "launch_log_dir": LaunchConfiguration("launch_log_dir"),
-                    "own_ip": ResolveHost(own_ip),
+                    "allowed_interfaces": resolved_interfaces,
                     "discovery_protocol": "SIMPLE"
                     if simple_discovery
                     else "SUPER_CLIENT",

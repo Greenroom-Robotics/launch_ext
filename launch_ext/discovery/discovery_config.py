@@ -19,9 +19,9 @@ class DiscoveryFastDDS(BaseModel):
         default="0.0.0.0",
         description="IP/host/interface of the discovery server. Assumes port of 11811",
     )
-    own_ip: str = Field(
-        default="0.0.0.0",
-        description="IP/host/interface address of the primary network interface. This is where DDS traffic will route to.",
+    allowed_interfaces: list[str] = Field(
+        default_factory=list,
+        description="List of IP/host/interface addresses to allow. First is used as primary. Empty means all interfaces.",
     )
 
 

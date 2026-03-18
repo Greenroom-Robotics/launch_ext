@@ -3,13 +3,38 @@
     xmlns:xacro="http://www.ros.org/wiki/xacro">
     <xacro:arg name="discovery_server_ip" default="" />
     <xacro:arg name="launch_log_dir" default="" />
-    <xacro:arg name="own_ip" default="" />
+    <xacro:arg name="allowed_interfaces" default="" />
     <xacro:arg name="discovery_protocol" default="CLIENT" />
     <xacro:arg name="ros_distro" default="jazzy" />
 
     <xacro:property name="discovery_protocol" value="$(arg discovery_protocol)" />
     <xacro:property name="ros_distro" value="$(arg ros_distro)" />
-    <xacro:property name="own_ip" value="$(arg own_ip)" />
+    <xacro:property name="iface_list" value="${'$(arg allowed_interfaces)'.split()}" />
+
+    <!-- Recursive macro to emit allowlist interface entries -->
+    <xacro:macro name="allowlist_loop" params="ifaces:=^">
+        <xacro:if value="${ifaces}">
+            <xacro:property name="iface" value="${ifaces.pop(0)}"/>
+            <interface name="${iface}" netmask_filter="OFF" />
+            <xacro:allowlist_loop/>
+        </xacro:if>
+    </xacro:macro>
+
+    <!-- Recursive macro to emit locator entries -->
+    <xacro:macro name="locator_loop" params="addrs:=^ port:=0">
+        <xacro:if value="${addrs}">
+            <xacro:property name="addr" value="${addrs.pop(0)}"/>
+            <locator>
+                <udpv4>
+                    <address>${addr}</address>
+                    <xacro:if value="${port != 0}">
+                        <port>${port}</port>
+                    </xacro:if>
+                </udpv4>
+            </locator>
+            <xacro:locator_loop/>
+        </xacro:if>
+    </xacro:macro>
 
     <profiles>
         <transport_descriptors>
@@ -24,12 +49,10 @@
             <transport_descriptor>
                 <transport_id>udp_transport</transport_id>
                 <type>UDPv4</type>
-                <xacro:if value="${own_ip != '0.0.0.0'}">
+                <xacro:if value="${iface_list}">
                     <interfaces>
                         <allowlist>
-                            <interface name="$(arg own_ip)" netmask_filter="OFF" />
-                            <!-- TODO: remove hardcoded tailscale interface after testing -->
-                            <interface name="100.64.0.170" netmask_filter="OFF" />
+                            <xacro:allowlist_loop ifaces="${list(iface_list)}"/>
                         </allowlist>
                     </interfaces>
                 </xacro:if>
@@ -42,13 +65,11 @@
                     <transport_id>shm_transport</transport_id>
                     <transport_id>udp_transport</transport_id>
                 </userTransports>
-                <defaultUnicastLocatorList>
-                    <locator>
-                        <udpv4>
-                            <address>$(arg own_ip)</address>
-                        </udpv4>
-                    </locator>
-                </defaultUnicastLocatorList>
+                <xacro:if value="${iface_list}">
+                    <defaultUnicastLocatorList>
+                        <xacro:locator_loop addrs="${list(iface_list)}"/>
+                    </defaultUnicastLocatorList>
+                </xacro:if>
                 <useBuiltinTransports>false</useBuiltinTransports>
                 <xacro:if value="${discovery_protocol == 'SERVER'}">
                     <builtin>
@@ -56,19 +77,17 @@
                             <discoveryProtocol>SERVER</discoveryProtocol>
                         </discovery_config>
                         <metatrafficUnicastLocatorList>
-                            <locator>
-                                <udpv4>
-                                    <address>$(arg own_ip)</address>
-                                    <port>11811</port>
-                                </udpv4>
-                            </locator>
-                            <!-- TODO: remove hardcoded tailscale locator after testing -->
-                            <locator>
-                                <udpv4>
-                                    <address>100.64.0.170</address>
-                                    <port>11811</port>
-                                </udpv4>
-                            </locator>
+                            <xacro:if value="${iface_list}">
+                                <xacro:locator_loop addrs="${list(iface_list)}" port="11811"/>
+                            </xacro:if>
+                            <xacro:unless value="${iface_list}">
+                                <locator>
+                                    <udpv4>
+                                        <address>0.0.0.0</address>
+                                        <port>11811</port>
+                                    </udpv4>
+                                </locator>
+                            </xacro:unless>
                         </metatrafficUnicastLocatorList>
                     </builtin>
                 </xacro:if>
