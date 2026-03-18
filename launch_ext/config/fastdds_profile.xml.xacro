@@ -77,17 +77,12 @@
                             <discoveryProtocol>SERVER</discoveryProtocol>
                         </discovery_config>
                         <metatrafficUnicastLocatorList>
-                            <xacro:if value="${iface_list}">
-                                <xacro:locator_loop addrs="${list(iface_list)}" port="11811"/>
-                            </xacro:if>
-                            <xacro:unless value="${iface_list}">
-                                <locator>
-                                    <udpv4>
-                                        <address>0.0.0.0</address>
-                                        <port>11811</port>
-                                    </udpv4>
-                                </locator>
-                            </xacro:unless>
+                            <locator>
+                                <udpv4>
+                                    <address>0.0.0.0</address>
+                                    <port>11811</port>
+                                </udpv4>
+                            </locator>
                         </metatrafficUnicastLocatorList>
                     </builtin>
                 </xacro:if>
