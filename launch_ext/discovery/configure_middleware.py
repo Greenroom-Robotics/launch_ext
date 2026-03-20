@@ -35,10 +35,9 @@ def configure_middleware(discovery: Discovery, with_server=True):
         fastdds = discovery.fastdds
         return [
             ConfigureFastDDS(
-                discovery_server_address="0.0.0.0",
                 with_discovery_server=fastdds.with_discovery_server and with_server,
                 discovery_server_ip=fastdds.discovery_server_ip,
-                own_ip=fastdds.own_ip,
+                allowed_interfaces=fastdds.allowed_interfaces,
                 simple_discovery=False,
             ),
         ]
@@ -52,10 +51,9 @@ def configure_middleware(discovery: Discovery, with_server=True):
 
     return [
         ConfigureFastDDS(
-            discovery_server_address="0.0.0.0",
             with_discovery_server=False,
             discovery_server_ip="0.0.0.0",
-            own_ip="0.0.0.0",
+            allowed_interfaces=[],
             simple_discovery=True,
         ),
     ]

@@ -15,6 +15,7 @@ setup(
     ],
     install_requires=[
         "setuptools",
+        "jinja2",
         # 'launch'
     ],
     zip_safe=True,
