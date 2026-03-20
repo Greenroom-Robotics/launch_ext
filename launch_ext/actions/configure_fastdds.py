@@ -31,9 +31,9 @@ class FastDDSProfileSubstitution(Substitution):
         discovery_server_ip: str,
         allowed_interfaces: list[str],
     ):
-        self.__discovery_protocol = discovery_protocol
-        self.__discovery_server_ip = discovery_server_ip
-        self.__allowed_interfaces = allowed_interfaces
+        self.discovery_protocol = discovery_protocol
+        self.discovery_server_ip = discovery_server_ip
+        self.allowed_interfaces = allowed_interfaces
 
     def perform(self, context):
         config_dir = PathJoinSubstitution(
@@ -46,19 +46,19 @@ class FastDDSProfileSubstitution(Substitution):
         template = env.get_template("fastdds_profile.xml.j2")
 
         interfaces = [
-            ResolveHost(iface).perform(context) for iface in self.__allowed_interfaces
+            ResolveHost(iface).perform(context) for iface in self.allowed_interfaces
         ]
-        discovery_server_ip = ResolveHost(self.__discovery_server_ip).perform(context)
+        discovery_server_ip = ResolveHost(self.discovery_server_ip).perform(context)
         launch_log_dir = LaunchConfiguration("launch_log_dir").perform(context)
         return template.render(
-            discovery_protocol=self.__discovery_protocol,
+            discovery_protocol=self.discovery_protocol,
             discovery_server_ip=discovery_server_ip,
             launch_log_dir=launch_log_dir,
             interfaces=interfaces,
         )
 
     def describe(self):
-        return f"FastDDSProfile({self.__discovery_protocol})"
+        return f"FastDDSProfile({self.discovery_protocol})"
 
 
 class ConfigureFastDDS(Action):
@@ -78,7 +78,6 @@ class ConfigureFastDDS(Action):
     def __init__(
         self,
         with_discovery_server: bool = False,
-        discovery_server_address: str = "0.0.0.0",
         discovery_server_ip: str = "0.0.0.0",
         allowed_interfaces: list[str] | None = None,
         simple_discovery: bool = True,
@@ -86,6 +85,21 @@ class ConfigureFastDDS(Action):
         fastdds_profile_super_client_path=None,
         **kwargs,
     ):
+        """
+        Initialize the ConfigureFastdds action.
+
+        Args:
+            with_discovery_server (bool): Whether to start a discovery server process
+            discovery_server_address (str): Address for the discovery server to listen on
+            discovery_server_ip (str): IP address where the discovery server can be reached by clients
+            allowed_interfaces (list[str]): List of IP/host/interface addresses to allow. Empty means all.
+            simple_discovery (bool): If True, use SIMPLE discovery protocol; otherwise use CLIENT/SUPER_CLIENT
+            fastdds_profile_path (str, optional): Path where to write the main Fast DDS profile.
+                Defaults to "~/fastdds_profile.xml"
+            fastdds_profile_super_client_path (str, optional): Path where to write the super client profile.
+                Defaults to "~/fastdds_profile_super_client.xml"
+            **kwargs: Additional arguments passed to the parent Action class
+        """
         super().__init__(**kwargs)
         if allowed_interfaces is None:
             allowed_interfaces = []
@@ -171,6 +185,19 @@ class ConfigureFastDDS(Action):
             self.actions.append(discovery_server)
 
     def execute(self, context: LaunchContext) -> None:
+        """
+        Execute all configured actions in sequence.
+
+        This method is called by the launch system when the action is executed.
+        It iterates through all the actions created during initialization and
+        executes them in order.
+
+        Args:
+            context (LaunchContext): The launch context
+
+        Returns:
+            None
+        """
         for action in self.actions:
             action.execute(context)
 
