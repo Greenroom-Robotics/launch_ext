@@ -10,6 +10,7 @@ from .unary import Unary
 from .write_temp_file import WriteTempFile
 from .yaml_to_file import YAMLToFile
 from .yaml_to_json import YamlToJson
+from .xacro import Xacro
 from .resolve_host import ResolveHost
 from .fastdds_superclient_environment import (
     FastDDSSuperclientEnvironment,
@@ -28,6 +29,7 @@ __all__ = [
     "YAMLToFile",
     "YamlToFile",
     "YamlToJson",
+    "Xacro",
     "ResolveHost",
     "FastDDSSuperclientEnvironment",
     "FastDDSClientEnvironment",
