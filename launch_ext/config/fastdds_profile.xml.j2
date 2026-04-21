@@ -73,12 +73,29 @@
                     <discovery_config>
                         <discoveryProtocol>{{ discovery_protocol }}</discoveryProtocol>
                         <discoveryServersList>
+                            {% if ros_distro == "kilted" %}
+                            <!-- FastDDS 3.x (kilted) uses direct locator format -->
                             <locator>
                                 <udpv4>
                                     <address>{{ discovery_server_ip }}</address>
                                     <port>11811</port>
                                 </udpv4>
                             </locator>
+                            {% else %}
+                            <!--
+                            FastDDS 2.x (jazzy and older - needed for iron lookout)
+                            -->
+                            <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+                                <metatrafficUnicastLocatorList>
+                                    <locator>
+                                        <udpv4>
+                                            <address>{{ discovery_server_ip }}</address>
+                                            <port>11811</port>
+                                        </udpv4>
+                                    </locator>
+                                </metatrafficUnicastLocatorList>
+                            </RemoteServer>
+                            {% endif %}
                         </discoveryServersList>
                     </discovery_config>
                 </builtin>
