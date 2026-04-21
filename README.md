@@ -2,6 +2,11 @@
 
 Extended functionality for ROS 2 launch system providing additional actions, substitutions, and conditions.
 
+### Supported Distros
+- Iron
+- Jazzy
+- Kilted
+
 ## Table of Contents
 
 - [Actions](#actions)
