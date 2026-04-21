@@ -14,6 +14,8 @@
                 <transport_id>udp_transport</transport_id>
                 <type>UDPv4</type>
                 {% if interfaces %}
+                {% if ros_distro == "kilted" %}
+                <!-- FastDDS 3.x (kilted) uses interfaces/allowlist -->
                 <interfaces>
                     <allowlist>
                         {% for iface in interfaces %}
@@ -21,6 +23,14 @@
                         {% endfor %}
                     </allowlist>
                 </interfaces>
+                {% else %}
+                <!-- Older FastDDS 2.x (iron) uses interfaceWhiteList -->
+                <interfaceWhiteList>
+                    {% for iface in interfaces %}
+                    <address>{{ iface }}</address>
+                    {% endfor %}
+                </interfaceWhiteList>
+                {% endif %}
                 {% endif %}
             </transport_descriptor>
         </transport_descriptors>
