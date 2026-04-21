@@ -14,6 +14,8 @@
                 <transport_id>udp_transport</transport_id>
                 <type>UDPv4</type>
                 {% if interfaces %}
+                {% if ros_distro == "kilted" %}
+                <!-- FastDDS 3.x (kilted) uses interfaces/allowlist -->
                 <interfaces>
                     <allowlist>
                         {% for iface in interfaces %}
@@ -21,6 +23,14 @@
                         {% endfor %}
                     </allowlist>
                 </interfaces>
+                {% else %}
+                <!-- Older FastDDS 2.x (iron) uses interfaceWhiteList -->
+                <interfaceWhiteList>
+                    {% for iface in interfaces %}
+                    <address>{{ iface }}</address>
+                    {% endfor %}
+                </interfaceWhiteList>
+                {% endif %}
                 {% endif %}
             </transport_descriptor>
         </transport_descriptors>
@@ -73,12 +83,29 @@
                     <discovery_config>
                         <discoveryProtocol>{{ discovery_protocol }}</discoveryProtocol>
                         <discoveryServersList>
+                            {% if ros_distro == "kilted" %}
+                            <!-- FastDDS 3.x (kilted) uses direct locator format -->
                             <locator>
                                 <udpv4>
                                     <address>{{ discovery_server_ip }}</address>
                                     <port>11811</port>
                                 </udpv4>
                             </locator>
+                            {% else %}
+                            <!--
+                            FastDDS 2.x (jazzy and older - needed for iron lookout)
+                            -->
+                            <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+                                <metatrafficUnicastLocatorList>
+                                    <locator>
+                                        <udpv4>
+                                            <address>{{ discovery_server_ip }}</address>
+                                            <port>11811</port>
+                                        </udpv4>
+                                    </locator>
+                                </metatrafficUnicastLocatorList>
+                            </RemoteServer>
+                            {% endif %}
                         </discoveryServersList>
                     </discovery_config>
                 </builtin>

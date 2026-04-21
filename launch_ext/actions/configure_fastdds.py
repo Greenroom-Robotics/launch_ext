@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 from jinja2 import Environment, FileSystemLoader
@@ -55,6 +56,7 @@ class FastDDSProfileSubstitution(Substitution):
             discovery_server_ip=discovery_server_ip,
             launch_log_dir=launch_log_dir,
             interfaces=interfaces,
+            ros_distro=os.environ.get("ROS_DISTRO", "kilted"),
         )
 
     def describe(self):
@@ -134,6 +136,8 @@ class ConfigureFastDDS(Action):
             cmd=[
                 "fastdds",
                 "discovery",
+                "-i",
+                "0",
                 "-x",
                 LaunchConfiguration("fastdds_server_profile"),
             ],
