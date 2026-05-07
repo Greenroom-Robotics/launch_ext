@@ -19,8 +19,13 @@ license = "MIT"
 authors = ["Russ Webber <russ.webber@greenroomrobotics.com>"]
 
 [package.build.backend]
-name = "pixi-build-ros"
+name = "pixi-build-ros-gr"
 version = "*"
+
+[package.build.config]
+mode = "pixi-native"
+build-type = "ament_python"
+distro = "kilted"
 
 [package.host-dependencies]
 python = "*"
