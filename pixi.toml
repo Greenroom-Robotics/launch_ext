@@ -1,0 +1,19 @@
+#:schema https://raw.githubusercontent.com/Greenroom-Robotics/vinca/master/vinca/schemas/greenroom_pixi_manifest.schema.json
+
+[package]
+name = "launch_ext"
+version = "0.0.1"
+description = "Some extras for launch tooling."
+license = "MIT"
+authors = ["Russ Webber <russ.webber@greenroomrobotics.com>"]
+
+[package.run-dependencies]
+ros-kilted-launch = "*"
+ros-kilted-example-interfaces = "*"
+ros-kilted-xacro = "*"
+psutil = "*"
+jinja2 = "*"
+gitpython = "*"
+
+[package.metadata.ros]
+build_type = "ament_python"
