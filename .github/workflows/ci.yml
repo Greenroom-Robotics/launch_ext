@@ -65,7 +65,7 @@ jobs:
           pattern: test-results-*
 
       - name: Publish test report
-        uses: EnricoMi/publish-unit-test-result-action@v2.23
+        uses: EnricoMi/publish-unit-test-result-action@v2.23.0
         with:
           check_name: Test results
           junit_files: 'test-artifacts/test-results-*/build/*/pytest.xml'
