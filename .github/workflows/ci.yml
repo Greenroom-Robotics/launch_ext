@@ -1,0 +1,60 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.ros_distro }}
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ros_distro: [jazzy, kilted, lyrical]
+    env:
+      ROS_DISTRO: ${{ matrix.ros_distro }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker compose build dev
+
+      - name: Run tests
+        run: docker compose run --rm test
+
+      - name: Collect test results
+        if: always()
+        run: |
+          mkdir -p test-artifacts
+          docker compose run --rm --no-deps --entrypoint '' \
+            -v "${PWD}/test-artifacts:/out" dev \
+            bash -c "cp -r /ros_ws/build /out/build 2>/dev/null || true; \
+                     cp -r /ros_ws/log /out/log 2>/dev/null || true"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.ros_distro }}
+          path: |
+            test-artifacts/build/**/test_results/**/*.xml
+            test-artifacts/log/latest_test/**
+          if-no-files-found: ignore
+
+      - name: Publish test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Test results (${{ matrix.ros_distro }})
+          path: 'test-artifacts/build/**/test_results/**/*.xml'
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
