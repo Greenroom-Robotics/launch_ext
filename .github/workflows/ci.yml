@@ -45,15 +45,28 @@ jobs:
             test-artifacts/log/latest_test/**
           if-no-files-found: ignore
 
-      - name: Publish test report
-        if: always()
-        uses: dorny/test-reporter@v1
-        with:
-          name: Test results (${{ matrix.ros_distro }})
-          path: 'test-artifacts/build/*/pytest.xml'
-          reporter: java-junit
-          fail-on-error: false
-
       - name: Tear down
         if: always()
         run: docker compose down -v
+
+  report:
+    name: Test report
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+    steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-artifacts
+          pattern: test-results-*
+
+      - name: Publish test report
+        uses: EnricoMi/publish-unit-test-result-action@v2.23
+        with:
+          check_name: Test results
+          junit_files: 'test-artifacts/test-results-*/build/*/pytest.xml'
+          check_run_annotations: all tests, skipped tests
